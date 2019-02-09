@@ -6,9 +6,9 @@ import { MyContext } from '../../types/MyContext';
 export class MeResolver {
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
-    if (!ctx.session!.userId) {
+    if (!ctx.koaCtx.session!.userId) {
       return undefined;
     }
-    return User.findOne(ctx.session!.userId);
+    return User.findOne(ctx.koaCtx.session!.userId);
   }
 }

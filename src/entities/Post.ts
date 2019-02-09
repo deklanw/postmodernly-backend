@@ -1,13 +1,11 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  Column,
   BaseEntity,
   OneToMany,
   CreateDateColumn,
-  OneToOne,
-  JoinColumn,
-  ManyToOne
+  ManyToOne,
+  Index
 } from 'typeorm';
 import { ObjectType, Field, ID } from 'type-graphql';
 import { Book } from './Book';
@@ -15,6 +13,7 @@ import { UserPostLike } from './UserPostLike';
 import { PostFragment } from './PostFragment';
 import { Portman } from './Portman';
 import { User } from './User';
+import { RelationColumn } from '../utils/relationColumn';
 
 @ObjectType()
 @Entity()
@@ -23,23 +22,39 @@ export class Post extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  // https://github.com/typeorm/typeorm/blob/master/test/functional/database-schema/column-types/postgres/entity/Post.ts#L97
+  @Field()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  created: Date;
+
   @Field(() => User)
-  @ManyToOne(() => User, user => user.posts, { nullable: false })
+  @ManyToOne(() => User, user => user.posts, {
+    nullable: false,
+    onDelete: 'CASCADE'
+  })
   creator: User;
+  @RelationColumn({ nullable: false })
+  @Index()
+  creatorId: number;
 
   @Field(() => Portman)
   @ManyToOne(() => Portman, prm => prm.posts, { nullable: false })
   portman: Portman;
+  @RelationColumn({ nullable: false })
+  @Index()
+  portmanId: number;
 
   @Field(() => Book)
-  @OneToOne(() => Book, { nullable: false })
-  @JoinColumn()
+  @ManyToOne(() => Book, { nullable: false })
   book1: Book;
+  @RelationColumn({ nullable: false })
+  book1Id: number;
 
   @Field(() => Book)
-  @OneToOne(() => Book, { nullable: false })
-  @JoinColumn()
+  @ManyToOne(() => Book, { nullable: false })
   book2: Book;
+  @RelationColumn({ nullable: false })
+  book2Id: number;
 
   @Field(() => [UserPostLike], { nullable: true })
   @OneToMany(() => UserPostLike, upl => upl.post)
@@ -48,10 +63,4 @@ export class Post extends BaseEntity {
   @Field(() => [PostFragment])
   @OneToMany(() => PostFragment, pf => pf.post)
   usedFragments: PostFragment[];
-
-  // https://github.com/typeorm/typeorm/blob/master/test/functional/database-schema/column-types/postgres/entity/Post.ts#L97
-  @Field()
-  @CreateDateColumn() // this becomes a "timestamp"
-  @Column()
-  created: Date;
 }

@@ -6,7 +6,7 @@ import { MyContext } from '../../types/MyContext';
 export class LogoutResolver {
   @Mutation(() => Boolean)
   logout(@Ctx() ctx: MyContext): Boolean {
-    ctx.session = undefined; // relying on browser behavior to clear cookie?
+    ctx.koaCtx.session = undefined; // relying on browser behavior to clear cookie?
     return true;
   }
 }

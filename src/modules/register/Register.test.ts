@@ -1,17 +1,15 @@
-import { Connection } from 'typeorm';
 import faker from 'faker';
+import { Connection } from 'typeorm';
 
-import { testConn } from '../../test-utils/testConn';
 import { gCall } from '../../test-utils/gCall';
 import { User } from '../../entities/User';
+import { testConn } from '../../test-utils/testConn';
 
 let conn: Connection;
 beforeAll(async () => {
   conn = await testConn();
-  jest.setTimeout(20000);
-  console.log('Connection established');
+  jest.setTimeout(20 * 1000);
 });
-
 afterAll(async () => {
   await conn.close();
 });
@@ -28,7 +26,7 @@ mutation Register($data: RegisterInput!) {
 `;
 
 describe('Register', () => {
-  it('create user', async () => {
+  it('Creates user.', async () => {
     const user = {
       email: faker.internet.email(),
       password: faker.internet.password()

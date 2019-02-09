@@ -1,5 +1,4 @@
-import { Resolver, Mutation, Arg, Ctx } from 'type-graphql';
-import { MyContext } from '../../types/MyContext';
+import { Resolver, Mutation, Arg } from 'type-graphql';
 import { redis } from '../../utils/RedisStore';
 import { User } from '../../entities/User';
 import { confirmUserPrefix } from '../../constants/redisPrefixes';
@@ -7,10 +6,7 @@ import { confirmUserPrefix } from '../../constants/redisPrefixes';
 @Resolver()
 export class ConfirmUserResolver {
   @Mutation(() => Boolean)
-  async confirmUser(
-    @Arg('token') token: string,
-    @Ctx() ctx: MyContext
-  ): Promise<Boolean> {
+  async confirmUser(@Arg('token') token: string): Promise<Boolean> {
     const userId = await redis.get(confirmUserPrefix + token);
 
     if (!userId) {

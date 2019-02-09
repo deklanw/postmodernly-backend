@@ -27,7 +27,7 @@ export class LoginResolver {
       return undefined;
     }
 
-    ctx.session!.userId = user.id;
+    ctx.koaCtx.session!.userId = user.id;
 
     return user;
   }

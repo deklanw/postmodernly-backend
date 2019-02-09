@@ -11,7 +11,10 @@ module.exports = {
     'no-unused-vars': 0,
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'prefer-template': 0,
-    'no-plusplus': ['error', { allowForLoopAfterthoughts: true }]
+    'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
+    'lines-between-class-members': 0,
+    'no-console': 0,
+    radix: 0
   },
   settings: {
     'import/resolver': {

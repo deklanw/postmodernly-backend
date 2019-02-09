@@ -10,8 +10,10 @@ import 'reflect-metadata';
 import { redis } from './utils/RedisStore';
 import { createSchema } from './utils/createSchema';
 import { sessionKey } from './constants/session';
-import { MyContext } from './types/MyContext';
 import { options } from './utils/dbConfig';
+import { bookLoader } from './loaders/bookLoader';
+import { authorLoader } from './loaders/authorLoader';
+import { fragmentLoader } from './loaders/fragmentLoader';
 
 const secret = 'fjieosjfoejf093j90j)#(#()';
 
@@ -22,7 +24,12 @@ const main = async () => {
   const apolloServer = new ApolloServer({
     schema,
     formatError: formatArgumentValidationError,
-    context: ({ ctx }: { ctx: MyContext }) => ctx
+    context: ({ ctx }: any) => ({
+      koaCtx: ctx,
+      bookLoader: bookLoader(),
+      authorLoader: authorLoader(),
+      fragmentLoader: fragmentLoader()
+    })
   });
 
   const app = new Koa();

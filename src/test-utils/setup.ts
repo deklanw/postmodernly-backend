@@ -1,6 +1,5 @@
-import { testConn } from './testConn';
+import { testConn, customDrop } from './testConn';
 
-testConn(true).then(() => {
-  console.log('Dropped test DB in preparation for tests');
-  process.exit();
-});
+testConn(false)
+  .then(() => customDrop())
+  .then(() => process.exit());

@@ -1,14 +1,7 @@
 import path from 'path';
-import { buildSchema, AuthChecker } from 'type-graphql';
-import { MyContext } from '../types/MyContext';
-
-const customAuthChecker: AuthChecker<MyContext> = (
-  { root, args, context, info },
-  roles
-) => !!context.session!.userId;
+import { buildSchema } from 'type-graphql';
 
 export const createSchema = () =>
   buildSchema({
-    resolvers: [path.join(__dirname, '../modules/**/*.resolver.ts')],
-    authChecker: customAuthChecker
+    resolvers: [path.join(__dirname, '../modules/**/*.resolver.ts')]
   });

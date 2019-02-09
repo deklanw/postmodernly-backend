@@ -1,18 +1,14 @@
-import { Connection } from 'typeorm';
 import faker from 'faker';
-import jsc from 'jsverify';
+import { Connection } from 'typeorm';
 
-import { testConn } from '../../test-utils/testConn';
 import { gCall } from '../../test-utils/gCall';
 import { User } from '../../entities/User';
+import { testConn } from '../../test-utils/testConn';
 
 let conn: Connection;
 beforeAll(async () => {
   conn = await testConn();
-  jest.setTimeout(20000);
-  console.log('Connection established');
 });
-
 afterAll(async () => {
   await conn.close();
 });

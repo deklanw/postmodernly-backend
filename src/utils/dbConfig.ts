@@ -10,7 +10,7 @@ export const options: PostgresConnectionOptions = {
   password: 'postgres',
   database: 'postmodernly',
   synchronize: true,
-  dropSchema: true,
+  dropSchema: false,
   logging: true,
   entities: ['src/entities/*.{ts,js}'],
   namingStrategy: new SnakeNamingStrategy()

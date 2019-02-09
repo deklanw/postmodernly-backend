@@ -9,9 +9,10 @@ import {
 import { ObjectType, Field, ID } from 'type-graphql';
 import { Author } from './Author';
 import { Fragment } from './Fragment';
+import { RelationColumn } from '../utils/relationColumn';
 
 @ObjectType()
-@Entity()
+@Entity({ synchronize: true })
 export class Book extends BaseEntity {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
@@ -21,14 +22,6 @@ export class Book extends BaseEntity {
   @Column('int', { unique: true })
   gbId: number;
 
-  @Field(() => Author)
-  @ManyToOne(() => Author, author => author.books, { nullable: false })
-  author: Author;
-
-  @Field(() => [Fragment])
-  @OneToMany(() => Fragment, fragment => fragment.book)
-  fragments: Fragment[];
-
   @Field()
   @Column('text')
   title: string;
@@ -36,4 +29,15 @@ export class Book extends BaseEntity {
   @Field()
   @Column('text')
   language: string;
+
+  @Field(() => Author)
+  @ManyToOne(() => Author, author => author.books, { nullable: false })
+  author: Author;
+  @RelationColumn({ nullable: false })
+  authorId: number;
+
+  // 'all fragments for given book' not a planned feature
+  @Field(() => [Fragment])
+  @OneToMany(() => Fragment, fragment => fragment.book)
+  fragments: Fragment[];
 }

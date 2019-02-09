@@ -9,7 +9,7 @@ import { ObjectType, Field, ID } from 'type-graphql';
 import { Book } from './Book';
 
 @ObjectType()
-@Entity()
+@Entity({ synchronize: true })
 export class Author extends BaseEntity {
   @Field(() => ID)
   @PrimaryGeneratedColumn()

@@ -4,7 +4,8 @@ import {
   Column,
   BaseEntity,
   OneToMany,
-  CreateDateColumn
+  CreateDateColumn,
+  Index
 } from 'typeorm';
 import { ObjectType, Field, ID } from 'type-graphql';
 import { UserPostLike } from './UserPostLike';
@@ -20,10 +21,26 @@ export class User extends BaseEntity {
 
   @Field()
   @Column('text', { unique: true })
+  @Index({ unique: true })
   email: string;
 
   @Column('text')
   password: string;
+
+  @Column('bool', { default: false })
+  confirmed: boolean;
+
+  @Field()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  created: Date;
+
+  @Field({ nullable: true })
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  lastPosted?: Date;
+
+  @Field({ nullable: true }) // nullable? have to reconsider
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  lastRolled?: Date;
 
   @Field(() => [Post], { nullable: true })
   @OneToMany(() => Post, post => post.creator)
@@ -36,19 +53,4 @@ export class User extends BaseEntity {
   @Field(() => [FragmentOptionUser]) // nullable?
   @OneToMany(() => FragmentOptionUser, fou => fou.user)
   fragmentOptions: FragmentOptionUser[];
-
-  @Column('bool', { default: false })
-  confirmed: boolean;
-
-  @Field()
-  @CreateDateColumn()
-  created: Date;
-
-  @Field({ nullable: true })
-  @Column('timestamp', { nullable: true })
-  lastPosted?: Date;
-
-  @Field({ nullable: true }) // nullable? have to reconsider
-  @Column('timestamp', { nullable: true })
-  lastRolled?: Date;
 }
