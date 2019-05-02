@@ -23,10 +23,8 @@ export const gCall = async ({ source, variableValues, userId }: Options) => {
     source,
     variableValues,
     contextValue: {
-      koaCtx: {
-        session: {
-          userId
-        }
+      session: {
+        userId
       }
     }
   });

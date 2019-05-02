@@ -6,10 +6,10 @@ import { MyContext } from '../../types/MyContext';
 export class MeResolver {
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
-    if (!ctx.koaCtx.session!.userId) {
-      console.log(ctx.koaCtx.session);
+    if (!ctx.session!.userId) {
+      console.log(ctx.session);
       return undefined;
     }
-    return User.findOne(ctx.koaCtx.session!.userId);
+    return User.findOne(ctx.session!.userId);
   }
 }

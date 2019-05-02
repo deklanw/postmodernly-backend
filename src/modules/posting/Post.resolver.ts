@@ -30,7 +30,7 @@ interface NewPostPayload {
 
 @Resolver()
 export class PostResolver {
-  @Subscription({
+  @Subscription(() => Int, {
     topics: NEW_POST
   })
   newPost(@Root()
@@ -55,8 +55,6 @@ export class PostResolver {
       ],
       order: { id: 'DESC' }
     });
-    console.log('Grabbed posts');
-    console.log(posts);
     return posts;
   }
 
@@ -66,7 +64,7 @@ export class PostResolver {
     @Ctx() ctx: MyContext,
     @Arg('postId', () => Int) postId: number
   ): Promise<Boolean> {
-    const { userId } = ctx.koaCtx.session!;
+    const { userId } = ctx.session!;
     await Post.delete({ id: postId, creatorId: userId });
     console.log('Deleted post');
     return true;
@@ -80,7 +78,7 @@ export class PostResolver {
     { fragments }: PostInput,
     @PubSub() pubSub: PubSubEngine
   ): Promise<number | undefined> {
-    const { userId } = ctx.koaCtx.session!;
+    const { userId } = ctx.session!;
     const fragmentIds = fragments.map(f => f.fragmentId);
     const orders = fragments.map(f => f.order);
 

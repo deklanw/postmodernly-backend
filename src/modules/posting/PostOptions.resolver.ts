@@ -36,7 +36,7 @@ export class PostOptionsResolver {
     @Ctx() ctx: MyContext,
     @Arg('data') { fragments }: ReorderOptionsInput
   ): Promise<Boolean> {
-    const { userId } = ctx.koaCtx.session!;
+    const { userId } = ctx.session!;
 
     if (fragments.length !== 30) {
       // easy check. there should be exactly 30 options
@@ -83,7 +83,7 @@ export class PostOptionsResolver {
   async getNewPostOptions(
     @Ctx() ctx: MyContext
   ): Promise<PostOptions | undefined> {
-    const { userId } = ctx.koaCtx.session!;
+    const { userId } = ctx.session!;
     const manager = getManager();
     const fragments = await manager.query(randomFragmentsQuery);
 

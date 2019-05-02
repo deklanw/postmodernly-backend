@@ -10,15 +10,8 @@ interface MySession {
   userId: number;
 }
 
-export interface koaCtx {
-  session?: MySession;
-  cookies?: any;
-  req: any;
-  res: any;
-}
-
 export interface MyContext {
-  koaCtx: koaCtx;
+  session?: MySession;
   bookLoader: DataLoader<string, Book>;
   authorLoader: DataLoader<string, Author>;
   fragmentLoader: DataLoader<string, Fragment>;

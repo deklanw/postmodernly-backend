@@ -9,7 +9,7 @@ export class UserResolver {
   @UseMiddleware(IsAuth)
   @Mutation(() => Boolean)
   async deleteUser(@Ctx() ctx: MyContext): Promise<Boolean> {
-    const { userId } = ctx.koaCtx.session!;
+    const { userId } = ctx.session!;
     await User.delete({ id: userId });
     console.log('Deleted user');
     return true;

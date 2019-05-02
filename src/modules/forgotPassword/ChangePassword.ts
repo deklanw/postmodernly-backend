@@ -32,7 +32,7 @@ export class ChangePasswordResolver {
     user.password = await bcrypt.hash(password, 15);
     await user.save();
 
-    ctx.koaCtx.session!.userId = user.id;
+    ctx.session!.userId = user.id;
 
     return user;
   }

@@ -31,7 +31,7 @@ export class LikePostResolver {
     @Ctx() ctx: MyContext,
     @Arg('data') { postId, like }: UserPostLikeInput
   ): Promise<Boolean> {
-    const { userId } = ctx.koaCtx.session!;
+    const { userId } = ctx.session!;
 
     const post = await Post.findOne({ id: postId });
     const { creatorId } = post!;

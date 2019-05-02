@@ -24,6 +24,7 @@ export class Book extends BaseEntity {
   gbId: number;
 
   @Column('text')
+  @Field()
   title: string;
 
   @Field()

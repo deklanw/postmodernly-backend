@@ -141,6 +141,7 @@ describe('FragmentOptions', () => {
   });
 
   it('Returns a response', () => {
+    console.log(response);
     expect(response.data).toBeTruthy();
     expect(response.data!.getNewPostOptions).toBeTruthy();
   });

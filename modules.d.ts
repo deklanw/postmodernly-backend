@@ -1,1 +1,1 @@
-declare module 'koa-redis';
+declare module 'fastify-session';
