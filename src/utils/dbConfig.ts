@@ -1,3 +1,4 @@
+import path from 'path';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { SnakeNamingStrategy } from './snakeNaming';
 
@@ -12,6 +13,6 @@ export const options: PostgresConnectionOptions = {
   synchronize: true,
   dropSchema: false,
   logging: true,
-  entities: ['src/entities/*.{ts,js}'],
+  entities: [path.join(__dirname, '../entities/*.{ts,js}')],
   namingStrategy: new SnakeNamingStrategy()
 };
