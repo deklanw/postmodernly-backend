@@ -4,7 +4,6 @@ import fastifySession from 'fastify-session';
 import fastifyCors from 'fastify-cors';
 import connectRedis from 'connect-redis';
 import { ApolloServer } from 'apollo-server-fastify';
-import { formatArgumentValidationError } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import 'reflect-metadata';
 
@@ -26,7 +25,6 @@ const main = async () => {
   const schema = await createSchema();
   const apolloServer = new ApolloServer({
     schema,
-    formatError: formatArgumentValidationError as any, // ?
     context: request => ({
       session: request.session,
       bookLoader: bookLoader(),
