@@ -46,7 +46,7 @@ export class User extends BaseEntity {
   @OneToMany(() => Post, post => post.creator)
   posts?: Post[];
 
-  @Field(() => [UserPostLike], { nullable: true })
+  @Field(() => [UserPostLike]) // can be empty but not null
   @OneToMany(() => UserPostLike, upl => upl.user)
   postLikes?: UserPostLike[];
 

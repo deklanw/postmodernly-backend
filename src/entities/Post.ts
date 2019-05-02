@@ -7,7 +7,7 @@ import {
   ManyToOne,
   Index
 } from 'typeorm';
-import { ObjectType, Field, ID } from 'type-graphql';
+import { ObjectType, Field, ID, Int } from 'type-graphql';
 import { Book } from './Book';
 import { UserPostLike } from './UserPostLike';
 import { PostFragment } from './PostFragment';
@@ -56,9 +56,13 @@ export class Post extends BaseEntity {
   @RelationColumn({ nullable: false })
   book2Id: number;
 
-  @Field(() => [UserPostLike], { nullable: true })
+  // @Field(() => [UserPostLike], { nullable: true })
+  // just need count on schema
   @OneToMany(() => UserPostLike, upl => upl.post)
   userLikes?: UserPostLike[];
+
+  @Field(() => Int)
+  likeCount: number;
 
   @Field(() => [PostFragment])
   @OneToMany(() => PostFragment, pf => pf.post)

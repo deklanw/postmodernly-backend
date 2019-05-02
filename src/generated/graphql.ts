@@ -1,15 +1,13 @@
 export type Maybe<T> = T | null;
 
+export interface UserPostLikeInput {
+  postId: number;
+
+  like: boolean;
+}
+
 export interface PostInput {
   fragments: FragInput[];
-
-  book1Id: number;
-
-  book2Id: number;
-
-  author1Id: number;
-
-  author2Id: number;
 }
 
 export interface FragInput {
@@ -18,16 +16,14 @@ export interface FragInput {
   order: number;
 }
 
+export interface ReorderOptionsInput {
+  fragments: FragInput[];
+}
+
 export interface RegisterInput {
   password: string;
 
   email: string;
-}
-
-export interface UserPostLikeInput {
-  postId: number;
-
-  like: boolean;
 }
 
 /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
@@ -43,6 +39,8 @@ export type DateTime = any;
 
 export interface Query {
   me?: Maybe<User>;
+
+  getPosts: Post[];
 
   hello: string;
 }
@@ -60,7 +58,7 @@ export interface User {
 
   posts?: Maybe<Post[]>;
 
-  postLikes?: Maybe<UserPostLike[]>;
+  postLikes: UserPostLike[];
 
   fragmentOptions: FragmentOptionUser[];
 }
@@ -78,7 +76,7 @@ export interface Post {
 
   book2: Book;
 
-  userLikes?: Maybe<UserPostLike[]>;
+  likeCount: number;
 
   usedFragments: PostFragment[];
 }
@@ -150,23 +148,43 @@ export interface FragmentOptionUser {
 }
 
 export interface Mutation {
-  getNewFragmentOptions: FragmentOptionUser[];
-
   login?: Maybe<User>;
 
   logout: boolean;
 
+  likePost: boolean;
+
   deletePost: boolean;
 
-  makePost: boolean;
+  makePost?: Maybe<number>;
+
+  reorderOptions: boolean;
+
+  getNewPostOptions: PostOptions;
 
   confirmUser: boolean;
 
   register: User;
 
   deleteUser: boolean;
+}
 
-  likePost: boolean;
+export interface PostOptions {
+  book1Options: BookFragmentOptions;
+
+  book2Options: BookFragmentOptions;
+
+  portman: Portman;
+}
+
+export interface BookFragmentOptions {
+  book: Book;
+
+  fragmentOptions: FragmentOptionUser[];
+}
+
+export interface Subscription {
+  newPost: number;
 }
 
 // ====================================================
@@ -178,18 +196,21 @@ export interface LoginMutationArgs {
 
   email: string;
 }
+export interface LikePostMutationArgs {
+  data: UserPostLikeInput;
+}
 export interface DeletePostMutationArgs {
   postId: number;
 }
 export interface MakePostMutationArgs {
   data: PostInput;
 }
+export interface ReorderOptionsMutationArgs {
+  data: ReorderOptionsInput;
+}
 export interface ConfirmUserMutationArgs {
   token: string;
 }
 export interface RegisterMutationArgs {
   data: RegisterInput;
-}
-export interface LikePostMutationArgs {
-  data: UserPostLikeInput;
 }

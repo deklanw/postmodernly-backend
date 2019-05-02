@@ -7,6 +7,7 @@ export class MeResolver {
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
     if (!ctx.koaCtx.session!.userId) {
+      console.log(ctx.koaCtx.session);
       return undefined;
     }
     return User.findOne(ctx.koaCtx.session!.userId);

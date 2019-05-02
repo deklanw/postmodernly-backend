@@ -7,6 +7,8 @@ import { formatArgumentValidationError } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import 'reflect-metadata';
 
+import { koaCtx } from './types/MyContext';
+
 import { redis } from './utils/RedisStore';
 import { createSchema } from './utils/createSchema';
 import { sessionKey } from './constants/session';
@@ -14,6 +16,8 @@ import { options } from './utils/dbConfig';
 import { bookLoader } from './loaders/bookLoader';
 import { authorLoader } from './loaders/authorLoader';
 import { fragmentLoader } from './loaders/fragmentLoader';
+import { userLoader } from './loaders/userLoader';
+import { portmanLoader } from './loaders/portmanLoader';
 
 const secret = 'fjieosjfoejf093j90j)#(#()';
 
@@ -24,18 +28,21 @@ const main = async () => {
   const apolloServer = new ApolloServer({
     schema,
     formatError: formatArgumentValidationError,
-    context: ({ ctx }: any) => ({
+    context: ({ ctx }: { ctx: koaCtx }) => ({
       koaCtx: ctx,
       bookLoader: bookLoader(),
       authorLoader: authorLoader(),
-      fragmentLoader: fragmentLoader()
+      fragmentLoader: fragmentLoader(),
+      userLoader: userLoader(),
+      portmanLoader: portmanLoader()
     })
   });
 
   const app = new Koa();
   app.keys = [secret];
 
-  app.use(cors({ credentials: true, origin: 'http://localhost:3000/' }));
+  // app.use(cors({ credentials: true, origin: 'localhost:3000/' }));
+  app.use(cors({ credentials: true }));
   app.use(
     session(
       {
@@ -49,11 +56,12 @@ const main = async () => {
     )
   );
 
-  apolloServer.applyMiddleware({ app });
-
-  app.listen(4000, () => {
+  const httpServer = app.listen(4000, () => {
     console.log('Server started on http://localhost:4000/graphql');
   });
+
+  apolloServer.applyMiddleware({ app });
+  apolloServer.installSubscriptionHandlers(httpServer);
 };
 
 main();

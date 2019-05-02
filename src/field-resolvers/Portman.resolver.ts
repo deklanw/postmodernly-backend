@@ -1,8 +1,8 @@
 import { Resolver, FieldResolver, Root, ResolverInterface } from 'type-graphql';
 
-import { Author } from '../../entities/Author';
-import { Portman } from '../../entities/Portman';
-import { Post } from '../../entities/Post';
+import { Author } from '../entities/Author';
+import { Portman } from '../entities/Portman';
+import { Post } from '../entities/Post';
 
 @Resolver(() => Portman)
 export class PortmanResolver implements ResolverInterface<Portman> {

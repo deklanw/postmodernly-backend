@@ -6,10 +6,10 @@ import {
   Ctx
 } from 'type-graphql';
 
-import { Fragment } from '../../entities/Fragment';
-import { Book } from '../../entities/Book';
-import { PostFragment } from '../../entities/PostFragment';
-import { MyContext } from '../../types/MyContext';
+import { Fragment } from '../entities/Fragment';
+import { Book } from '../entities/Book';
+import { PostFragment } from '../entities/PostFragment';
+import { MyContext } from '../types/MyContext';
 
 @Resolver(() => Fragment)
 export class FragmentResolver implements ResolverInterface<Fragment> {

@@ -1,0 +1,22 @@
+import {
+  Resolver,
+  FieldResolver,
+  Root,
+  ResolverInterface,
+  Ctx
+} from 'type-graphql';
+
+import { Fragment } from '../entities/Fragment';
+import { PostFragment } from '../entities/PostFragment';
+import { MyContext } from '../types/MyContext';
+
+@Resolver(() => PostFragment)
+export class PostFragmentResolver implements ResolverInterface<PostFragment> {
+  @FieldResolver()
+  async fragment(
+    @Root() postFragment: PostFragment,
+    @Ctx() { fragmentLoader }: MyContext
+  ): Promise<Fragment> {
+    return fragmentLoader.load(postFragment.fragmentId.toString());
+  }
+}

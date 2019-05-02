@@ -13,6 +13,8 @@ import { Post } from './Post';
 import { portmanteau } from '../utils/portmanteau/portmanteau';
 import { RelationColumn } from '../utils/relationColumn';
 
+const lastElement = <T>(arr: T[]) => arr[arr.length - 1];
+
 @ObjectType()
 @Entity()
 @Index(['author1Id', 'author2Id'], { unique: true })
@@ -57,22 +59,16 @@ export class Portman extends BaseEntity {
       return existingPortman;
     }
 
-    const lastElement = (arr: any[]) => arr[arr.length - 1];
-
-    // do in one go
     // this should error out if the authors don't exist for both IDs
-    const author1 = await Author.findOne({ id: author1Id });
-    const author2 = await Author.findOne({ id: author2Id });
-    const author1LastName = lastElement(author1!.name.split(' '));
-    const author2LastName = lastElement(author2!.name.split(' '));
+    const [author1, author2] = await Author.findByIds([author1Id, author2Id]);
+    const author1LastName = lastElement(author1!.name.split(' ')).toLowerCase();
+    const author2LastName = lastElement(author2!.name.split(' ')).toLowerCase();
 
     const newPortman = this.create({
       author1Id,
       author2Id,
       portman: portmanteau(author1LastName, author2LastName)
     });
-
-    console.log(newPortman);
 
     await this.insert(newPortman);
     console.log('Saved new Portman in DB.');

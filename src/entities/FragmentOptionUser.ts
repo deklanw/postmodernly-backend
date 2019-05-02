@@ -1,5 +1,6 @@
 import { Entity, BaseEntity, ManyToOne, PrimaryColumn, Column } from 'typeorm';
 import { Field, ObjectType, Int } from 'type-graphql';
+
 import { User } from './User';
 import { Fragment } from './Fragment';
 

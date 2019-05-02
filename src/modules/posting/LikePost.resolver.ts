@@ -1,8 +1,5 @@
 import {
   Resolver,
-  FieldResolver,
-  Root,
-  ResolverInterface,
   Field,
   Int,
   InputType,
@@ -14,7 +11,6 @@ import {
 
 import { UserPostLike } from '../../entities/UserPostLike';
 import { Post } from '../../entities/Post';
-import { User } from '../../entities/User';
 import { IsAuth } from '../../middleware/IsAuth';
 import { MyContext } from '../../types/MyContext';
 
@@ -27,8 +23,8 @@ class UserPostLikeInput {
   like: boolean;
 }
 
-@Resolver(() => UserPostLike)
-export class UserPostLikeResolver implements ResolverInterface<UserPostLike> {
+@Resolver()
+export class LikePostResolver {
   @UseMiddleware(IsAuth)
   @Mutation(() => Boolean)
   async likePost(
@@ -57,15 +53,5 @@ export class UserPostLikeResolver implements ResolverInterface<UserPostLike> {
       console.log('Deleted Like');
     }
     return true;
-  }
-
-  @FieldResolver()
-  async user(@Root() userPostLike: UserPostLike): Promise<User> {
-    return (await User.findOne({ id: userPostLike.userId }))!;
-  }
-
-  @FieldResolver()
-  async post(@Root() userPostLike: UserPostLike): Promise<Post> {
-    return (await Post.findOne({ id: userPostLike.postId }))!;
   }
 }

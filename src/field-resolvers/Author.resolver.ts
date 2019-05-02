@@ -1,7 +1,7 @@
 import { Resolver, FieldResolver, Root, ResolverInterface } from 'type-graphql';
 
-import { Author } from '../../entities/Author';
-import { Book } from '../../entities/Book';
+import { Author } from '../entities/Author';
+import { Book } from '../entities/Book';
 
 @Resolver(() => Author)
 export class AuthorResolver implements ResolverInterface<Author> {

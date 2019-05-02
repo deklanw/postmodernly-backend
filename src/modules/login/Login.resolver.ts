@@ -12,6 +12,7 @@ export class LoginResolver {
     @Ctx() ctx: MyContext
   ): Promise<User | undefined> {
     const user = await User.findOne({ where: { email } });
+    console.log('got user');
 
     if (!user) {
       return undefined;

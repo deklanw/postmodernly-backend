@@ -1,17 +1,15 @@
 import {
   Resolver,
-  Mutation,
-  Arg,
   Ctx,
   FieldResolver,
   Root,
   ResolverInterface
 } from 'type-graphql';
 
-import { Book } from '../../entities/Book';
-import { Author } from '../../entities/Author';
-import { Fragment } from '../../entities/Fragment';
-import { MyContext } from '../../types/MyContext';
+import { Book } from '../entities/Book';
+import { Author } from '../entities/Author';
+import { Fragment } from '../entities/Fragment';
+import { MyContext } from '../types/MyContext';
 
 @Resolver(() => Book)
 export class BookResolver implements ResolverInterface<Book> {
