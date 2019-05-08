@@ -1,158 +1,70 @@
 import faker from 'faker';
+import Container from 'typedi';
 import { Connection } from 'typeorm';
 
-import { gCall } from '../../test-utils/gCall';
 import { User } from '../../entities/User';
 import { FragmentOptionUser } from '../../entities/FragmentOptionUser';
-import { testConn } from '../../test-utils/testConn';
-import { UnPromisify } from '../../types/unpromisify';
-import { FragmentOptionUser as FOU } from '../../generated/graphql';
+import { testConn, setupTOContainer } from '../../test-utils/util';
 import { UserPostLike } from '../../entities/UserPostLike';
+import { PostOptions } from '../../tql-only/PostOptions';
+import { PostingService } from './Posting.service';
+import { PostOptionsService } from './PostOptions.service';
+import { UserService } from '../user-management/User.service';
+import { UserPostLikeService } from './LikePost.service';
 
 let conn: Connection;
 let user1: User;
 let user2: User;
 
-beforeAll(async () => {
-  conn = await testConn();
-  user1 = await User.create({
-    email: faker.internet.email(),
-    password: faker.internet.password() // hash pass?
-  }).save();
+let postingService: PostingService;
+let postOptionService: PostOptionsService;
+let likePostService: UserPostLikeService;
+let userService: UserService;
 
-  user2 = await User.create({
+beforeAll(async () => {
+  jest.setTimeout(20 * 1000);
+  setupTOContainer();
+  conn = await testConn();
+  postingService = Container.get(PostingService);
+  postOptionService = Container.get(PostOptionsService);
+  likePostService = Container.get(UserPostLikeService);
+  userService = Container.get(UserService);
+
+  const { user: registeredUser1, token: token1 } = await userService.register({
     email: faker.internet.email(),
-    password: faker.internet.password() // hash pass?
-  }).save();
+    password: faker.internet.password()
+  });
+
+  const { user: registeredUser2, token: token2 } = await userService.register({
+    email: faker.internet.email(),
+    password: faker.internet.password()
+  });
+
+  await userService.confirmUser(token1);
+  await userService.confirmUser(token2);
+
+  user1 = registeredUser1;
+  user2 = registeredUser2;
 });
 
 afterAll(async () => {
   await conn.close();
 });
 
-const getNewOptionsMutation = `
-mutation {
-  getNewPostOptions {
-    portman {
-      id
-      portman
-    }
-    book1Options {
-      book {
-        id
-        title
-        language
-        author {
-          id
-          name
-        }
-      }
-      fragmentOptions {
-        fragment {
-          id
-          context
-          fragment
-        }
-      }
-    }
-    book2Options {
-      book {
-        id
-        title
-        language
-        author {
-          id
-          name
-        }
-      }
-      fragmentOptions {
-        fragment {
-          id
-          context
-          fragment
-        }
-      }
-    }
-  }
-}
-
-`;
-
-const getOptionsMinimal = `
-mutation {
-  getNewPostOptions {
-    portman {
-      id
-      portman
-    }
-    book1Options {
-      fragmentOptions {
-        order
-        fragment {
-          id
-        }
-      }
-    }
-    book2Options {
-      fragmentOptions {
-        order
-        fragment {
-          id
-        }
-      }
-    }
-  }
-}
-`;
-
-const reorderMutation = `
-mutation($data: ReorderOptionsInput!) {
-  reorderOptions(data: $data)
-}
-`;
-
-const makePostMutation = `
-mutation($data: PostInput!) {
-  makePost(data: $data)
-}
-`;
-
-const likePostMutation = `
-mutation($data: UserPostLikeInput!) {
-  likePost(data: $data)
-}
-`;
-
 describe('FragmentOptions', () => {
-  const makeGetNewOptionsCall = () =>
-    gCall({
-      source: getNewOptionsMutation,
-      userId: user1.id
-    });
-  const makeGetNewOptionsMinimalCall = () =>
-    gCall({
-      source: getOptionsMinimal,
-      userId: user1.id
-    });
-  let response: UnPromisify<ReturnType<typeof makeGetNewOptionsCall>>;
+  let response: PostOptions;
 
   beforeAll(async () => {
-    response = await makeGetNewOptionsCall();
+    response = await postOptionService.getNewPostOptions(user1.id);
   });
 
   it('Returns a response', () => {
-    console.log(response);
-    expect(response.data).toBeTruthy();
-    expect(response.data!.getNewPostOptions).toBeTruthy();
+    expect(response).toBeTruthy();
   });
 
   it('There are 15 options for both books', () => {
-    expect(response.data).toBeTruthy();
-    expect(response.data!.getNewPostOptions).toBeTruthy();
-    const book1Options: FOU[] = response.data!.getNewPostOptions.book1Options
-      .fragmentOptions;
-    const book2Options: FOU[] = response.data!.getNewPostOptions.book2Options
-      .fragmentOptions;
+    const book1Options = response.book1Options.fragmentOptions;
+    const book2Options = response.book2Options.fragmentOptions;
 
     expect(book1Options.length).toEqual(15);
     expect(book2Options.length).toEqual(15);
@@ -164,249 +76,223 @@ describe('FragmentOptions', () => {
   });
 
   it('Calling again will result in still 30 options.', async () => {
-    await makeGetNewOptionsCall();
+    await postOptionService.getNewPostOptions(user1.id);
     const options = await FragmentOptionUser.find({ userId: user1.id });
     expect(options.length).toEqual(30);
   });
 
   it('Reorder Options succeeds with an identical reorder.', async () => {
-    const splitOptions = (await makeGetNewOptionsMinimalCall()).data!
-      .getNewPostOptions;
-    const allOptions = splitOptions.book1Options.fragmentOptions
-      .concat(splitOptions.book2Options.fragmentOptions)
-      .map((el: any) => ({
+    const options = await postOptionService.getNewPostOptions(user1.id);
+
+    const allOptions = options.book1Options.fragmentOptions
+      .concat(options.book2Options.fragmentOptions)
+      .map(el => ({
         order: el.order,
-        fragmentId: parseInt(el.fragment.id)
+        fragmentId: el.fragment.id
       }));
-    const reorderResponse = await gCall({
-      source: reorderMutation,
-      userId: user1.id,
-      variableValues: {
-        data: {
-          fragments: allOptions
-        }
-      }
-    });
-    expect(reorderResponse.data!.reorderOptions).toBeTruthy();
+
+    const reorderResponse = await postOptionService.reorderOptions(
+      { fragments: allOptions },
+      user1.id
+    );
+    expect(reorderResponse).toBeTruthy();
   });
 
   it('Reorder Options fails if not all options are given', async () => {
-    const splitOptions = (await makeGetNewOptionsMinimalCall()).data!
-      .getNewPostOptions;
-    const allOptions = splitOptions.book1Options.fragmentOptions.map(
-      (el: any) => ({
-        order: el.order,
-        fragmentId: parseInt(el.fragment.id)
-      })
+    const options = await postOptionService.getNewPostOptions(user1.id);
+
+    const allOptions = options.book1Options.fragmentOptions.map(el => ({
+      order: el.order,
+      fragmentId: el.fragment.id
+    }));
+
+    const reorderResponse = await postOptionService.reorderOptions(
+      { fragments: allOptions },
+      user1.id
     );
-    const reorderResponse = await gCall({
-      source: reorderMutation,
-      userId: user1.id,
-      variableValues: {
-        data: {
-          fragments: allOptions
-        }
-      }
-    });
-    expect(reorderResponse.data!.reorderOptions).toBeFalsy();
+    expect(reorderResponse).toBeFalsy();
   });
 
   it('Reorder Options fails if orders are duplicated', async () => {
-    const splitOptions = (await makeGetNewOptionsMinimalCall()).data!
-      .getNewPostOptions;
-    const allOptions = splitOptions.book1Options.fragmentOptions
-      .concat(splitOptions.book2Options.fragmentOptions)
-      .map((el: any) => ({
+    const options = await postOptionService.getNewPostOptions(user1.id);
+
+    const allOptions = options.book1Options.fragmentOptions
+      .concat(options.book2Options.fragmentOptions)
+      .map(el => ({
         order: el.order,
-        fragmentId: parseInt(el.fragment.id)
+        fragmentId: el.fragment.id
       }));
 
     allOptions[0].order = 1;
     allOptions[1].order = 1;
-    const reorderResponse = await gCall({
-      source: reorderMutation,
-      userId: user1.id,
-      variableValues: {
-        data: {
-          fragments: allOptions
-        }
-      }
-    });
-    expect(reorderResponse.data!.reorderOptions).toBeFalsy();
+
+    const reorderResponse = await postOptionService.reorderOptions(
+      { fragments: allOptions },
+      user1.id
+    );
+    expect(reorderResponse).toBeFalsy();
   });
 });
 
 describe('Posting', () => {
-  const makeCall = () =>
-    gCall({
-      source: getNewOptionsMutation,
-      userId: user1.id
-    });
-  let response: UnPromisify<ReturnType<typeof makeCall>>;
-
-  let book1Options: FOU[];
-  let book2Options: FOU[];
+  let options: PostOptions;
 
   beforeAll(async () => {
-    response = await makeCall();
-
-    book1Options = response.data!.getNewPostOptions.book1Options
-      .fragmentOptions;
-    book2Options = response.data!.getNewPostOptions.book2Options
-      .fragmentOptions;
+    options = await postOptionService.getNewPostOptions(user1.id);
   });
 
   it('Successfully makes a post', async () => {
-    const makePostResponse = await gCall({
-      source: makePostMutation,
-      variableValues: {
-        data: {
-          fragments: [
-            { fragmentId: parseInt(book1Options[0].fragment.id), order: 0 },
-            { fragmentId: parseInt(book2Options[0].fragment.id), order: 1 }
-          ]
-        }
+    const makePostResponse = await postingService.makePost(
+      {
+        fragments: [
+          {
+            fragmentId: options.book1Options.fragmentOptions[0].fragment.id,
+            order: 0
+          },
+          {
+            fragmentId: options.book2Options.fragmentOptions[0].fragment.id,
+            order: 1
+          }
+        ]
       },
-      userId: user1.id
-    });
+      user1.id
+    );
 
-    console.log(makePostResponse);
-
-    expect(makePostResponse.data).toBeTruthy();
+    expect(makePostResponse).toBeTruthy();
   });
 
   it('Post fails if fragments come from same book.', async () => {
-    const makePostResponse = await gCall({
-      source: makePostMutation,
-      variableValues: {
-        data: {
-          fragments: [
-            { fragmentId: parseInt(book1Options[0].fragment.id), order: 0 },
-            { fragmentId: parseInt(book1Options[1].fragment.id), order: 1 }
-          ]
-        }
+    const makePostResponse = await postingService.makePost(
+      {
+        fragments: [
+          {
+            fragmentId: options.book1Options.fragmentOptions[0].fragment.id,
+            order: 0
+          },
+          {
+            fragmentId: options.book1Options.fragmentOptions[1].fragment.id,
+            order: 1
+          }
+        ]
       },
-      userId: user1.id
-    });
+      user1.id
+    );
 
-    expect(makePostResponse.data!.makePost).toBeFalsy();
+    expect(makePostResponse).toBeFalsy();
   });
 
   it('Post fails if order is duplicated', async () => {
-    const makePostResponse = await gCall({
-      source: makePostMutation,
-      variableValues: {
-        data: {
-          fragments: [
-            { fragmentId: parseInt(book1Options[0].fragment.id), order: 0 },
-            { fragmentId: parseInt(book2Options[0].fragment.id), order: 0 }
-          ]
-        }
+    const makePostResponse = await postingService.makePost(
+      {
+        fragments: [
+          {
+            fragmentId: options.book1Options.fragmentOptions[0].fragment.id,
+            order: 1
+          },
+          {
+            fragmentId: options.book2Options.fragmentOptions[0].fragment.id,
+            order: 1
+          }
+        ]
       },
-      userId: user1.id
-    });
+      user1.id
+    );
 
-    expect(makePostResponse.data!.makePost).toBeFalsy();
+    expect(makePostResponse).toBeFalsy();
   });
 
   it('Can successfully like a post.', async () => {
-    const makePostResponseU1 = await gCall({
-      source: makePostMutation,
-      variableValues: {
-        data: {
-          fragments: [
-            { fragmentId: parseInt(book1Options[0].fragment.id), order: 0 },
-            { fragmentId: parseInt(book2Options[0].fragment.id), order: 1 }
-          ]
-        }
+    const makePostResponse = await postingService.makePost(
+      {
+        fragments: [
+          {
+            fragmentId: options.book1Options.fragmentOptions[0].fragment.id,
+            order: 0
+          },
+          {
+            fragmentId: options.book2Options.fragmentOptions[0].fragment.id,
+            order: 1
+          }
+        ]
       },
-      userId: user1.id
-    });
-    const postId = makePostResponseU1.data!.makePost;
+      user1.id
+    );
 
-    const likePostResponse = await gCall({
-      source: likePostMutation,
-      variableValues: {
-        data: {
-          postId: parseInt(postId),
-          like: true
-        }
+    const likePostResponse = await likePostService.likePost(
+      {
+        postId: makePostResponse!,
+        like: true
       },
-      userId: user2.id
-    });
+      user2.id
+    );
 
-    expect(likePostResponse.data!.likePost).toBeTruthy();
+    expect(likePostResponse).toBeTruthy();
   });
 
   it('Liking your own post fails.', async () => {
-    const makePostResponseU1 = await gCall({
-      source: makePostMutation,
-      variableValues: {
-        data: {
-          fragments: [
-            { fragmentId: parseInt(book1Options[0].fragment.id), order: 0 },
-            { fragmentId: parseInt(book2Options[0].fragment.id), order: 1 }
-          ]
-        }
+    const makePostResponse = await postingService.makePost(
+      {
+        fragments: [
+          {
+            fragmentId: options.book1Options.fragmentOptions[0].fragment.id,
+            order: 0
+          },
+          {
+            fragmentId: options.book2Options.fragmentOptions[0].fragment.id,
+            order: 1
+          }
+        ]
       },
-      userId: user1.id
-    });
-    const postId = makePostResponseU1.data!.makePost;
+      user1.id
+    );
 
-    const likePostResponse = await gCall({
-      source: likePostMutation,
-      variableValues: {
-        data: {
-          postId: parseInt(postId),
-          like: true
-        }
+    const likePostResponse = await likePostService.likePost(
+      {
+        postId: makePostResponse!,
+        like: true
       },
-      userId: user1.id
-    });
+      user1.id
+    );
 
-    expect(likePostResponse.data!.likePost).toBeFalsy();
+    expect(likePostResponse).toBeFalsy();
   });
 
   it('Can unlike a post.', async () => {
-    const makePostResponseU1 = await gCall({
-      source: makePostMutation,
-      variableValues: {
-        data: {
-          fragments: [
-            { fragmentId: parseInt(book1Options[0].fragment.id), order: 0 },
-            { fragmentId: parseInt(book2Options[0].fragment.id), order: 1 }
-          ]
-        }
+    const makePostResponse = await postingService.makePost(
+      {
+        fragments: [
+          {
+            fragmentId: options.book1Options.fragmentOptions[0].fragment.id,
+            order: 0
+          },
+          {
+            fragmentId: options.book2Options.fragmentOptions[0].fragment.id,
+            order: 1
+          }
+        ]
       },
-      userId: user1.id
-    });
-    const postId = makePostResponseU1.data!.makePost;
+      user1.id
+    );
 
-    await gCall({
-      source: likePostMutation,
-      variableValues: {
-        data: {
-          postId: parseInt(postId),
-          like: true
-        }
+    await likePostService.likePost(
+      {
+        postId: makePostResponse!,
+        like: true
       },
-      userId: user2.id
-    });
+      user2.id
+    );
 
-    await gCall({
-      source: likePostMutation,
-      variableValues: {
-        data: {
-          postId: parseInt(postId),
-          like: false
-        }
+    await likePostService.likePost(
+      {
+        postId: makePostResponse!,
+        like: false
       },
-      userId: user2.id
-    });
+      user2.id
+    );
 
     const unliked = await UserPostLike.findOne({
       userId: user2.id,
-      postId: parseInt(postId)
+      postId: makePostResponse!
     });
 
     expect(unliked).toBeUndefined();

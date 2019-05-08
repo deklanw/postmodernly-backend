@@ -1,3 +1,5 @@
+import Container from 'typedi';
+
 import { graphql, GraphQLSchema, GraphQLArgs } from 'graphql';
 import { createSchema } from '../utils/createSchema';
 
@@ -15,7 +17,7 @@ let schema: GraphQLSchema;
 
 export const gCall = async ({ source, variableValues, userId }: Options) => {
   if (!schema) {
-    schema = await createSchema();
+    schema = await createSchema(Container);
   }
 
   return graphql({

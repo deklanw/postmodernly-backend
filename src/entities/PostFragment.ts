@@ -6,8 +6,6 @@ import { Post } from './Post';
 @ObjectType()
 @Entity()
 export class PostFragment extends BaseEntity {
-
-
   @Field(() => Int)
   @Column('int')
   order: number;

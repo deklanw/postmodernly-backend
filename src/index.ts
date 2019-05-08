@@ -3,8 +3,9 @@ import fastifyCookie from 'fastify-cookie';
 import fastifySession from 'fastify-session';
 import fastifyCors from 'fastify-cors';
 import connectRedis from 'connect-redis';
+import Container from 'typedi';
 import { ApolloServer } from 'apollo-server-fastify';
-import { createConnection } from 'typeorm';
+import { createConnection, useContainer } from 'typeorm';
 import 'reflect-metadata';
 
 import { redis } from './utils/RedisStore';
@@ -20,10 +21,12 @@ import { portmanLoader } from './loaders/portmanLoader';
 const secret = 'fjieosjfoejf09ofjeosijfiosejfoes3j90j)#(#()';
 
 const main = async () => {
+  useContainer(Container);
+  console.log('Setup TypeORM container');
   await createConnection(options);
   console.log('Created connection.');
 
-  const schema = await createSchema();
+  const schema = await createSchema(Container);
   console.log('Created schema.');
 
   const apolloServer = new ApolloServer({

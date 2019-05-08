@@ -14,6 +14,8 @@ module.exports = {
     'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
     'lines-between-class-members': 0,
     'no-console': 0,
+    'no-useless-constructor': 0,
+    'no-empty-function': 0,
     radix: 0
   },
   settings: {
