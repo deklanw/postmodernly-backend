@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  BaseEntity,
   ManyToOne,
   OneToMany
 } from 'typeorm';
@@ -12,8 +11,8 @@ import { Fragment } from './Fragment';
 import { RelationColumn } from '../utils/relationColumn';
 
 @ObjectType()
-@Entity({ synchronize: true })
-export class Book extends BaseEntity {
+@Entity()
+export class Book {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;

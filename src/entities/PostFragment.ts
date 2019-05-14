@@ -1,11 +1,11 @@
-import { Entity, BaseEntity, ManyToOne, PrimaryColumn, Column } from 'typeorm';
+import { Entity, ManyToOne, PrimaryColumn, Column } from 'typeorm';
 import { Field, ObjectType, Int } from 'type-graphql';
 import { Fragment } from './Fragment';
 import { Post } from './Post';
 
 @ObjectType()
 @Entity()
-export class PostFragment extends BaseEntity {
+export class PostFragment {
   @Field(() => Int)
   @Column('int')
   order: number;

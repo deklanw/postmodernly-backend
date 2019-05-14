@@ -1,11 +1,11 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  BaseEntity,
   OneToMany,
   CreateDateColumn,
   ManyToOne,
-  Index
+  Index,
+  Column
 } from 'typeorm';
 import { ObjectType, Field, ID, Int } from 'type-graphql';
 import { Book } from './Book';
@@ -17,7 +17,7 @@ import { RelationColumn } from '../utils/relationColumn';
 
 @ObjectType()
 @Entity()
-export class Post extends BaseEntity {
+export class Post {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,15 +27,18 @@ export class Post extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp with time zone' })
   created: Date;
 
-  @Field(() => User)
+  @Field(() => User, { nullable: true })
   @ManyToOne(() => User, user => user.posts, {
-    nullable: false,
+    nullable: true,
     onDelete: 'CASCADE'
   })
-  creator: User;
-  @RelationColumn({ nullable: false })
+  creator?: User;
+  @RelationColumn({ nullable: true })
   @Index()
-  creatorId: number;
+  creatorId?: number;
+
+  @Column('text')
+  creatorIP: string;
 
   @Field(() => Portman)
   @ManyToOne(() => Portman, prm => prm.posts, { nullable: false })
@@ -62,6 +65,7 @@ export class Post extends BaseEntity {
   userLikes?: UserPostLike[];
 
   @Field(() => Int)
+  @Column('int', { default: 0 })
   likeCount: number;
 
   @Field(() => [PostFragment])

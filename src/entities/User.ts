@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  BaseEntity,
   OneToMany,
   CreateDateColumn,
   Index
@@ -14,7 +13,7 @@ import { Post } from './Post';
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class User {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
@@ -33,14 +32,6 @@ export class User extends BaseEntity {
   @Field()
   @CreateDateColumn({ type: 'timestamp with time zone' })
   created: Date;
-
-  @Field({ nullable: true })
-  @Column({ type: 'timestamp with time zone', nullable: true })
-  lastPosted?: Date;
-
-  @Field({ nullable: true }) // nullable? have to reconsider
-  @Column({ type: 'timestamp with time zone', nullable: true })
-  lastRolled?: Date;
 
   @Field(() => [Post], { nullable: true })
   @OneToMany(() => Post, post => post.creator)

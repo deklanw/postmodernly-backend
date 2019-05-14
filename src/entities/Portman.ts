@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  BaseEntity,
   OneToMany,
   Index,
   ManyToOne
@@ -15,16 +14,16 @@ import { RelationColumn } from '../utils/relationColumn';
 @ObjectType()
 @Entity()
 @Index(['author1Id', 'author2Id'], { unique: true })
-export class Portman extends BaseEntity {
+export class Portman {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
 
   @Field()
   @Column('text')
-  portman: string;
+  name: string;
 
-  @Field(() => [Post], { nullable: true }) // posts could be deleted
+  @Field(() => [Post]) // could be empty, but not null
   @OneToMany(() => Post, post => post.portman)
   posts: Post[];
 

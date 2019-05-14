@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  BaseEntity,
   ManyToOne,
   OneToMany
 } from 'typeorm';
@@ -12,15 +11,15 @@ import { PostFragment } from './PostFragment';
 import { RelationColumn } from '../utils/relationColumn';
 
 @ObjectType()
-@Entity({ synchronize: true })
-export class Fragment extends BaseEntity {
+@Entity()
+export class Fragment {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
 
   @Field()
   @Column('text')
-  fragment: string;
+  fragmentText: string;
 
   @Field()
   @Column('text')
@@ -28,7 +27,7 @@ export class Fragment extends BaseEntity {
 
   @Field(() => [PostFragment], { nullable: true })
   @OneToMany(() => PostFragment, pf => pf.fragment)
-  postsWhichUse: PostFragment[];
+  postsWhichUse?: PostFragment[];
 
   @Field(() => Book)
   @ManyToOne(() => Book, book => book.fragments, { nullable: false })

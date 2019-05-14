@@ -4,16 +4,19 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface
 } from 'class-validator';
-import { User } from '../../entities/User';
+import { Service } from 'typedi';
 
+import { UserService } from './User.service';
+
+@Service()
 @ValidatorConstraint({ async: true })
 export class IsEmailAlreadyExistConstraint
   implements ValidatorConstraintInterface {
-  validate(email: string) {
-    return User.findOne({ where: { email } }).then(user => {
-      if (user) return false;
-      return true;
-    });
+  constructor(private readonly userService: UserService) {}
+
+  async validate(email: string) {
+    const user = await this.userService.findUser({ where: { email } });
+    return !user;
   }
 }
 

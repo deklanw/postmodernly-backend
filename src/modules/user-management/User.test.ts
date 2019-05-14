@@ -8,10 +8,10 @@ import { UserService } from './User.service';
 let conn: Connection;
 let service: UserService;
 beforeAll(async () => {
+  jest.setTimeout(600 * 1000);
   setupTOContainer();
   conn = await testConn();
   service = Container.get(UserService);
-  jest.setTimeout(20 * 1000);
 });
 afterAll(async () => {
   await conn.close();
@@ -31,7 +31,7 @@ describe('Register', () => {
 
     expect(registeredUser.email).toEqual(user.email);
     expect(registeredUser.password).not.toEqual(user.password);
-    const dbUser = await service.findOne({ where: { email: user.email } });
+    const dbUser = await service.findUser({ where: { email: user.email } });
 
     expect(dbUser).toBeDefined();
     expect(dbUser!.confirmed).toBeFalsy();

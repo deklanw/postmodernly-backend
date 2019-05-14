@@ -3,9 +3,7 @@ import Container from 'typedi';
 import { Connection } from 'typeorm';
 
 import { User } from '../../entities/User';
-import { FragmentOptionUser } from '../../entities/FragmentOptionUser';
 import { testConn, setupTOContainer } from '../../test-utils/util';
-import { UserPostLike } from '../../entities/UserPostLike';
 import { PostOptions } from '../../tql-only/PostOptions';
 import { PostingService } from './Posting.service';
 import { PostOptionsService } from './PostOptions.service';
@@ -21,10 +19,13 @@ let postOptionService: PostOptionsService;
 let likePostService: UserPostLikeService;
 let userService: UserService;
 
+const ipAddress = 'dummy ip address';
+
 beforeAll(async () => {
-  jest.setTimeout(20 * 1000);
+  jest.setTimeout(600 * 1000);
   setupTOContainer();
   conn = await testConn();
+
   postingService = Container.get(PostingService);
   postOptionService = Container.get(PostOptionsService);
   likePostService = Container.get(UserPostLikeService);
@@ -55,7 +56,7 @@ describe('FragmentOptions', () => {
   let response: PostOptions;
 
   beforeAll(async () => {
-    response = await postOptionService.getNewPostOptions(user1.id);
+    response = await postOptionService.getNewPostOptions(ipAddress, user1.id);
   });
 
   it('Returns a response', () => {
@@ -71,18 +72,23 @@ describe('FragmentOptions', () => {
   });
 
   it('Thirty options are created in DB.', async () => {
-    const options = await FragmentOptionUser.find({ userId: user1.id });
-    expect(options.length).toEqual(30);
+    const options = await postOptionService.getUserOptions(user1.id);
+    expect(options.book1Options.fragmentOptions.length).toEqual(15);
+    expect(options.book2Options.fragmentOptions.length).toEqual(15);
   });
 
   it('Calling again will result in still 30 options.', async () => {
-    await postOptionService.getNewPostOptions(user1.id);
-    const options = await FragmentOptionUser.find({ userId: user1.id });
-    expect(options.length).toEqual(30);
+    await postOptionService.getNewPostOptions(ipAddress, user1.id);
+    const options = await postOptionService.getUserOptions(user1.id);
+    expect(options.book1Options.fragmentOptions.length).toEqual(15);
+    expect(options.book2Options.fragmentOptions.length).toEqual(15);
   });
 
   it('Reorder Options succeeds with an identical reorder.', async () => {
-    const options = await postOptionService.getNewPostOptions(user1.id);
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
 
     const allOptions = options.book1Options.fragmentOptions
       .concat(options.book2Options.fragmentOptions)
@@ -93,13 +99,17 @@ describe('FragmentOptions', () => {
 
     const reorderResponse = await postOptionService.reorderOptions(
       { fragments: allOptions },
+      ipAddress,
       user1.id
     );
     expect(reorderResponse).toBeTruthy();
   });
 
   it('Reorder Options fails if not all options are given', async () => {
-    const options = await postOptionService.getNewPostOptions(user1.id);
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
 
     const allOptions = options.book1Options.fragmentOptions.map(el => ({
       order: el.order,
@@ -108,13 +118,17 @@ describe('FragmentOptions', () => {
 
     const reorderResponse = await postOptionService.reorderOptions(
       { fragments: allOptions },
+      ipAddress,
       user1.id
     );
     expect(reorderResponse).toBeFalsy();
   });
 
   it('Reorder Options fails if orders are duplicated', async () => {
-    const options = await postOptionService.getNewPostOptions(user1.id);
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
 
     const allOptions = options.book1Options.fragmentOptions
       .concat(options.book2Options.fragmentOptions)
@@ -128,6 +142,7 @@ describe('FragmentOptions', () => {
 
     const reorderResponse = await postOptionService.reorderOptions(
       { fragments: allOptions },
+      ipAddress,
       user1.id
     );
     expect(reorderResponse).toBeFalsy();
@@ -135,13 +150,12 @@ describe('FragmentOptions', () => {
 });
 
 describe('Posting', () => {
-  let options: PostOptions;
-
-  beforeAll(async () => {
-    options = await postOptionService.getNewPostOptions(user1.id);
-  });
-
   it('Successfully makes a post', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
+
     const makePostResponse = await postingService.makePost(
       {
         fragments: [
@@ -155,6 +169,7 @@ describe('Posting', () => {
           }
         ]
       },
+      ipAddress,
       user1.id
     );
 
@@ -162,6 +177,11 @@ describe('Posting', () => {
   });
 
   it('Post fails if fragments come from same book.', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
+
     const makePostResponse = await postingService.makePost(
       {
         fragments: [
@@ -175,6 +195,7 @@ describe('Posting', () => {
           }
         ]
       },
+      ipAddress,
       user1.id
     );
 
@@ -182,6 +203,10 @@ describe('Posting', () => {
   });
 
   it('Post fails if order is duplicated', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
     const makePostResponse = await postingService.makePost(
       {
         fragments: [
@@ -195,6 +220,7 @@ describe('Posting', () => {
           }
         ]
       },
+      ipAddress,
       user1.id
     );
 
@@ -202,6 +228,10 @@ describe('Posting', () => {
   });
 
   it('Can successfully like a post.', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
     const makePostResponse = await postingService.makePost(
       {
         fragments: [
@@ -215,6 +245,7 @@ describe('Posting', () => {
           }
         ]
       },
+      ipAddress,
       user1.id
     );
 
@@ -230,6 +261,10 @@ describe('Posting', () => {
   });
 
   it('Liking your own post fails.', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
     const makePostResponse = await postingService.makePost(
       {
         fragments: [
@@ -243,6 +278,7 @@ describe('Posting', () => {
           }
         ]
       },
+      ipAddress,
       user1.id
     );
 
@@ -258,6 +294,10 @@ describe('Posting', () => {
   });
 
   it('Can unlike a post.', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
     const makePostResponse = await postingService.makePost(
       {
         fragments: [
@@ -271,6 +311,7 @@ describe('Posting', () => {
           }
         ]
       },
+      ipAddress,
       user1.id
     );
 
@@ -290,10 +331,7 @@ describe('Posting', () => {
       user2.id
     );
 
-    const unliked = await UserPostLike.findOne({
-      userId: user2.id,
-      postId: makePostResponse!
-    });
+    const unliked = await likePostService.findLike(user2.id, makePostResponse!);
 
     expect(unliked).toBeUndefined();
   });

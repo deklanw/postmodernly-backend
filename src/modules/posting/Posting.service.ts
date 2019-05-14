@@ -1,45 +1,54 @@
 import _ from 'lodash';
 
 import { Service } from 'typedi';
-import { InjectRepository, InjectConnection } from 'typeorm-typedi-extensions';
+import { InjectRepository } from 'typeorm-typedi-extensions';
 import {
   Repository,
-  Connection,
   Transaction,
   TransactionManager,
   EntityManager
 } from 'typeorm';
 import { Post } from '../../entities/Post';
 import { PostInput } from './PostInput';
-import { uniqueElementCount, dateTimeStamp } from '../../utils/util';
+import { uniqueElementCount } from '../../utils/util';
 import { PortmanService } from './Portman.service';
 import { PostFragment } from '../../entities/PostFragment';
-import { User } from '../../entities/User';
 import { FragmentOptionUser } from '../../entities/FragmentOptionUser';
-import { FragInput } from '../../generated/graphql';
 import { Portman } from '../../entities/Portman';
+import { FragmentOptionAnon } from '../../entities/FragmentOptionAnon';
+import {
+  FragmentOptionUserRepository,
+  FragmentOptionAnonRepository
+} from '../../repos/FragmentOptionUser.repo';
+import { FragInput } from './FragInput';
 
 @Service()
 export class PostingService {
   constructor(
     private readonly portmanService: PortmanService,
     @InjectRepository(FragmentOptionUser)
-    private readonly fragmentOptionUserRepo: Repository<FragmentOptionUser>
+    private readonly fragmentOptionUserRepo: FragmentOptionUserRepository,
+    @InjectRepository(FragmentOptionAnon)
+    private readonly fragmentOptionAnonRepo: FragmentOptionAnonRepository,
+    @InjectRepository(Post)
+    private readonly postRepo: Repository<Post>
   ) {}
 
   // check efficiency. is this best way to do this?
   @Transaction()
-  private async createPost(
+  private async createPostAndDeleteOptions(
     fragments: FragInput[],
     portman: Portman,
     book1Id: number,
     book2Id: number,
-    creatorId: number,
+    ipAddress: string,
+    creatorId?: number,
     @TransactionManager() em?: EntityManager
   ) {
     const post = em!.create(Post, {
       creatorId,
       portmanId: portman.id,
+      creatorIP: ipAddress,
       book1Id,
       book2Id
     });
@@ -54,9 +63,12 @@ export class PostingService {
     );
     console.log('Inserted Post Fragments');
 
-    // set User last posted
-    await em!.update(User, { id: creatorId }, { lastPosted: dateTimeStamp() });
-    console.log('Updated User last post');
+    if (creatorId) {
+      await em!.delete(FragmentOptionUser, { userId: creatorId });
+    } else {
+      await em!.delete(FragmentOptionAnon, { ipAddress });
+    }
+    console.log('Deleted options');
 
     return post.id;
   }
@@ -64,7 +76,7 @@ export class PostingService {
   async getPosts() {
     // paginate
     // subscriptions?
-    const posts = await Post.find({
+    const posts = await this.postRepo.find({
       relations: [
         'creator',
         'book1',
@@ -76,10 +88,16 @@ export class PostingService {
       order: { id: 'DESC' }
     });
 
+    console.log(posts);
+
     return posts;
   }
 
-  async makePost({ fragments }: PostInput, creatorId: number) {
+  async makePost(
+    { fragments }: PostInput,
+    ipAddress: string,
+    creatorId?: number
+  ) {
     const fragmentIds = fragments.map(f => f.fragmentId);
     const orders = fragments.map(f => f.order);
 
@@ -95,22 +113,19 @@ export class PostingService {
 
     // get the FragmentOptions for the current User, joined with the Book and Author info,
     // joined with the fragmentIds used in the post
-    const usedFragmentOptions = await this.fragmentOptionUserRepo
-      .createQueryBuilder()
-      .select([
-        'Fragment.bookId',
-        'Author.id',
-        'FragmentOptionUser.fragmentId',
-        'FragmentOptionUser.order'
-      ])
-      .innerJoin('FragmentOptionUser.fragment', 'Fragment')
-      .innerJoin('Fragment.book', 'Book')
-      .innerJoin('Book.author', 'Author')
-      .where('FragmentOptionUser.userId = :userId', { userId: creatorId })
-      .andWhere('FragmentOptionUser.fragmentId IN (:...fids)', {
-        fids: fragmentIds
-      })
-      .getRawMany();
+    let usedFragmentOptions;
+
+    if (creatorId) {
+      usedFragmentOptions = await this.fragmentOptionUserRepo.getPersonOptionsJoined(
+        creatorId,
+        fragmentIds
+      );
+    } else {
+      usedFragmentOptions = await this.fragmentOptionAnonRepo.getAnonOptionsJoined(
+        ipAddress,
+        fragmentIds
+      );
+    }
 
     // every fragment chosen for this post is among the User's options
     const onlyUsesOptions = usedFragmentOptions.length === fragmentIds.length;
@@ -159,18 +174,23 @@ export class PostingService {
     );
 
     // insert Post, then PostFragments
-    return this.createPost(
+    return this.createPostAndDeleteOptions(
       fragments,
       portman,
       bookInfo1.bookId,
       bookInfo2.bookId,
+      ipAddress,
       creatorId
     );
   }
 
   async deletePost(postId: number, creatorId: number) {
-    await Post.delete({ id: postId, creatorId });
-    console.log('Deleted post');
-    return true;
+    const post = await this.postRepo.findOne({ id: postId, creatorId });
+    if (post) {
+      await this.postRepo.remove(post);
+      console.log('Deleted post');
+      return true;
+    }
+    return false;
   }
 }

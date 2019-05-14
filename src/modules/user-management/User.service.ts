@@ -12,8 +12,8 @@ import {
 } from '../../constants/redisPrefixes';
 import { createConfirmationToken } from '../../utils/createConfirmationURL';
 import { sendEmail } from '../../utils/sendEmail';
-import { RegisterInput } from '../../generated/graphql';
 import { ChangePasswordInput } from './ChangePasswordInput';
+import { RegisterInput } from './RegisterInput';
 
 // make services out of redis and email sending?
 
@@ -29,12 +29,11 @@ export class UserService {
   }: RegisterInput): Promise<{ user: User; token: string }> {
     const hashedPass = await bcrypt.hash(password, 15);
 
-    const user = await this.userRepo
-      .create({
-        email,
-        password: hashedPass
-      })
-      .save();
+    const user = await this.userRepo.create({
+      email,
+      password: hashedPass
+    });
+    await this.userRepo.save(user);
 
     const token = await createConfirmationToken(user.id);
     const url = `http://localhost:3000/user/confirm/${token}`;
@@ -119,16 +118,20 @@ export class UserService {
   }
 
   async deleteUser(id: number) {
-    await User.delete({ id });
-    console.log('Deleted user');
-    return true;
+    const user = await this.userRepo.findOne({ id });
+    if (user) {
+      await this.userRepo.remove(user);
+      console.log('Deleted user');
+      return true;
+    }
+    return false;
   }
 
-  async findOneById(id: number) {
+  async findUserById(id: number) {
     return this.userRepo.findOne(id);
   }
 
-  async findOne(options: FindOneOptions<User>) {
+  async findUser(options: FindOneOptions<User>) {
     return this.userRepo.findOne(options);
   }
 }

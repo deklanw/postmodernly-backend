@@ -26,6 +26,16 @@ export interface RegisterInput {
   email: string;
 }
 
+export interface ChangePasswordInput {
+  password: string;
+
+  token: string;
+}
+
+export interface PasswordInput {
+  password: string;
+}
+
 /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
 export type DateTime = any;
 
@@ -38,29 +48,9 @@ export type DateTime = any;
 // ====================================================
 
 export interface Query {
-  me?: Maybe<User>;
-
   getPosts: Post[];
 
-  hello: string;
-}
-
-export interface User {
-  id: string;
-
-  email: string;
-
-  created: DateTime;
-
-  lastPosted?: Maybe<DateTime>;
-
-  lastRolled?: Maybe<DateTime>;
-
-  posts?: Maybe<Post[]>;
-
-  postLikes: UserPostLike[];
-
-  fragmentOptions: FragmentOptionUser[];
+  me?: Maybe<User>;
 }
 
 export interface Post {
@@ -81,44 +71,36 @@ export interface Post {
   usedFragments: PostFragment[];
 }
 
-export interface Portman {
+export interface User {
   id: string;
 
-  portman: string;
+  email: string;
+
+  created: DateTime;
 
   posts?: Maybe<Post[]>;
 
-  author1: Author;
+  postLikes: UserPostLike[];
 
-  author2: Author;
+  fragmentOptions: FragmentOptionUser[];
 }
 
-export interface Author {
-  id: string;
+export interface UserPostLike {
+  user: User;
 
-  name: string;
-
-  books: Book[];
+  post: Post;
 }
 
-export interface Book {
-  id: string;
+export interface FragmentOptionUser {
+  order: number;
 
-  gbId: number;
-
-  title: string;
-
-  language: string;
-
-  author: Author;
-
-  fragments: Fragment[];
+  fragment: Fragment;
 }
 
 export interface Fragment {
   id: string;
 
-  fragment: string;
+  fragmentText: string;
 
   context: string;
 
@@ -135,36 +117,64 @@ export interface PostFragment {
   post: Post;
 }
 
-export interface UserPostLike {
-  user: User;
+export interface Book {
+  id: string;
 
-  post: Post;
+  gbId: number;
+
+  title: string;
+
+  language: string;
+
+  author: Author;
+
+  fragments: Fragment[];
 }
 
-export interface FragmentOptionUser {
-  order: number;
+export interface Author {
+  id: string;
 
-  fragment: Fragment;
+  name: string;
+
+  books: Book[];
+}
+
+export interface Portman {
+  id: string;
+
+  name: string;
+
+  posts?: Maybe<Post[]>;
+
+  author1: Author;
+
+  author2: Author;
 }
 
 export interface Mutation {
-  login?: Maybe<User>;
-
-  logout: boolean;
-
   likePost: boolean;
 
   deletePost: boolean;
 
   makePost?: Maybe<number>;
 
+  getOptions: PostOptions;
+
   reorderOptions: boolean;
 
   getNewPostOptions: PostOptions;
 
+  register: User;
+
   confirmUser: boolean;
 
-  register: User;
+  login?: Maybe<User>;
+
+  changePassword?: Maybe<User>;
+
+  forgotPassword: boolean;
+
+  logout: boolean;
 
   deleteUser: boolean;
 }
@@ -187,15 +197,22 @@ export interface Subscription {
   newPost: number;
 }
 
+export interface FragmentOption {
+  order: number;
+
+  fragment: Fragment;
+}
+
+export interface FragmentOptionAnon {
+  order: number;
+
+  fragment: Fragment;
+}
+
 // ====================================================
 // Arguments
 // ====================================================
 
-export interface LoginMutationArgs {
-  password: string;
-
-  email: string;
-}
 export interface LikePostMutationArgs {
   data: UserPostLikeInput;
 }
@@ -208,9 +225,20 @@ export interface MakePostMutationArgs {
 export interface ReorderOptionsMutationArgs {
   data: ReorderOptionsInput;
 }
+export interface RegisterMutationArgs {
+  data: RegisterInput;
+}
 export interface ConfirmUserMutationArgs {
   token: string;
 }
-export interface RegisterMutationArgs {
-  data: RegisterInput;
+export interface LoginMutationArgs {
+  password: string;
+
+  email: string;
+}
+export interface ChangePasswordMutationArgs {
+  data: ChangePasswordInput;
+}
+export interface ForgotPasswordMutationArgs {
+  email: string;
 }

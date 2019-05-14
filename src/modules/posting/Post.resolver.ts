@@ -51,11 +51,10 @@ export class PostResolver {
     @Ctx() ctx: MyContext,
     @Arg('postId', () => Int) postId: number
   ): Promise<Boolean> {
-    const { userId } = ctx.session!;
-    return this.postingService.deletePost(postId, userId); // false if not owner of post?????????????
+    const { userId } = ctx.session.userInfo!;
+    return this.postingService.deletePost(postId, userId);
   }
 
-  @UseMiddleware(IsAuth)
   @Mutation(() => Int, { nullable: true })
   async makePost(
     @Ctx() ctx: MyContext,
@@ -63,8 +62,12 @@ export class PostResolver {
     input: PostInput,
     @PubSub() pubSub: PubSubEngine
   ): Promise<number | undefined> {
-    const { userId } = ctx.session!;
-    const postId = await this.postingService.makePost(input, userId);
+    let userId: number | undefined;
+    if (ctx.session.userInfo && ctx.session.userInfo.userId) {
+      ({ userId } = ctx.session.userInfo!);
+    }
+    const { ipAddress } = ctx;
+    const postId = await this.postingService.makePost(input, ipAddress, userId);
 
     await pubSub.publish(NEW_POST, { postId });
 

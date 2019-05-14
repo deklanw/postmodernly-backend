@@ -12,7 +12,7 @@ import { Fragment } from '../entities/Fragment';
 @Resolver(() => FragmentOptionUser)
 export class FragmentOptionUserResolver
   implements ResolverInterface<FragmentOptionUser> {
-  @FieldResolver()
+  @FieldResolver(() => Fragment)
   async fragment(
     @Root() fragmentOptionUser: FragmentOptionUser,
     @Ctx() { fragmentLoader }: MyContext

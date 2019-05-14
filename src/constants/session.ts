@@ -1,1 +1,1 @@
-export const sessionKey = 'sesh_id';
+export const sessionKey = 'sessionId';

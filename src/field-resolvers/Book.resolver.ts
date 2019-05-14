@@ -5,14 +5,22 @@ import {
   Root,
   ResolverInterface
 } from 'type-graphql';
+import { Repository } from 'typeorm';
+import { InjectRepository } from 'typeorm-typedi-extensions';
+import { Service } from 'typedi';
 
 import { Book } from '../entities/Book';
 import { Author } from '../entities/Author';
 import { Fragment } from '../entities/Fragment';
 import { MyContext } from '../types/MyContext';
 
+@Service()
 @Resolver(() => Book)
 export class BookResolver implements ResolverInterface<Book> {
+  constructor(
+    @InjectRepository(Fragment)
+    private readonly fragmentRepo: Repository<Fragment>
+  ) {}
   @FieldResolver()
   async author(
     @Root() book: Book,
@@ -27,6 +35,6 @@ export class BookResolver implements ResolverInterface<Book> {
 
   @FieldResolver()
   async fragments(@Root() book: Book): Promise<Fragment[]> {
-    return (await Fragment.find({ bookId: book.id }))!;
+    return (await this.fragmentRepo.find({ bookId: book.id }))!;
   }
 }

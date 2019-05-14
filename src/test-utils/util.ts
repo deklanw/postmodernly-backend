@@ -11,7 +11,7 @@ export const setupTOContainer = () => {
 
 export const customTruncate = async () => {
   // truncate everything besides Author, Book, Fragment. These contain constant data.
-  const dropMostQuery = `TRUNCATE fragment_option_user, portman, post, post_fragment, "user", user_post_like CASCADE`;
+  const dropMostQuery = `TRUNCATE fragment_option_user, fragment_option_anon, portman, post, post_fragment, "user", user_post_like CASCADE`;
   const manager = getManager();
   await manager.query(dropMostQuery);
   console.log('Custom truncate executed.');

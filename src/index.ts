@@ -1,11 +1,14 @@
 import fastify from 'fastify';
 import fastifyCookie from 'fastify-cookie';
-import fastifySession from 'fastify-session';
 import fastifyCors from 'fastify-cors';
-import connectRedis from 'connect-redis';
+import fastifyRedis from 'fastify-redis';
+import abstractCache from 'abstract-cache';
+import fastifyCaching from 'fastify-caching';
+import fastifyServerSession from 'fastify-server-session';
 import Container from 'typedi';
 import { ApolloServer } from 'apollo-server-fastify';
-import { createConnection, useContainer } from 'typeorm';
+import { createConnection, useContainer as useContainerTO } from 'typeorm';
+import { useContainer as useContainerCV } from 'class-validator';
 import 'reflect-metadata';
 
 import { redis } from './utils/RedisStore';
@@ -19,10 +22,20 @@ import { userLoader } from './loaders/userLoader';
 import { portmanLoader } from './loaders/portmanLoader';
 
 const secret = 'fjieosjfoejf09ofjeosijfiosejfoes3j90j)#(#()';
+const SESSION_DURATION_S = 60 * 60 * 24 * 7; // 7 days
+
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  credentials: true
+};
 
 const main = async () => {
-  useContainer(Container);
-  console.log('Setup TypeORM container');
+  // typeorm use container
+  useContainerTO(Container);
+  // class-validator useContainer
+  useContainerCV(Container);
+  console.log('Setup TypeORM and class-validator containers');
+
   await createConnection(options);
   console.log('Created connection.');
 
@@ -33,6 +46,7 @@ const main = async () => {
     schema,
     context: request => ({
       session: request.session,
+      ipAddress: request.ip,
       bookLoader: bookLoader(),
       authorLoader: authorLoader(),
       fragmentLoader: fragmentLoader(),
@@ -46,24 +60,31 @@ const main = async () => {
 
   const app = fastify();
 
-  const RedisStore = connectRedis(fastifySession);
-
-  // origin: 'localhost:3000/'
-  app.register(fastifyCors, { credentials: true });
-  app.register(fastifyCookie);
-  app.register(fastifySession, {
-    secret,
-    cookieName: sessionKey,
-    store: new RedisStore({ client: redis as any }),
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+  const abcache = abstractCache({
+    useAwait: false,
+    driver: {
+      name: 'abstract-cache-redis',
+      options: { client: redis }
     }
   });
 
-  app.register(apolloServer.createHandler());
+  app.register(fastifyCors, corsOptions); // only needed for non-graphql requests
+  app.register(fastifyCookie);
+  app.register(fastifyRedis, { client: redis });
+  app.register(fastifyCaching, { cache: abcache });
+  app.register(fastifyServerSession, {
+    secretKey: secret,
+    sessionMaxAge: SESSION_DURATION_S * 1000,
+    sessionCookieName: sessionKey,
+    cookie: {
+      httpOnly: true,
+      maxAge: SESSION_DURATION_S,
+      expires: SESSION_DURATION_S,
+      sameSite: false
+    }
+  });
+
+  app.register(apolloServer.createHandler({ cors: corsOptions }));
 
   app.listen(4000, () => {
     console.log('Server started on http://localhost:4000/graphql');

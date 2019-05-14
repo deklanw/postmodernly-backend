@@ -41,7 +41,7 @@ export class PortmanService {
     const newPortman = this.portmanRepo.create({
       author1Id,
       author2Id,
-      portman: portmanteau(author1LastName, author2LastName)
+      name: portmanteau(author1LastName, author2LastName)
     });
 
     await this.portmanRepo.insert(newPortman);

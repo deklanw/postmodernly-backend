@@ -5,6 +5,10 @@ import {
   ResolverInterface,
   Ctx
 } from 'type-graphql';
+import { Repository } from 'typeorm';
+import { InjectRepository } from 'typeorm-typedi-extensions';
+import { Service } from 'typedi';
+
 import { Post } from '../entities/Post';
 import { User } from '../entities/User';
 import { Book } from '../entities/Book';
@@ -13,18 +17,30 @@ import { UserPostLike } from '../entities/UserPostLike';
 import { PostFragment } from '../entities/PostFragment';
 import { MyContext } from '../types/MyContext';
 
+@Service()
 @Resolver(() => Post)
 export class PostResolver implements ResolverInterface<Post> {
+  constructor(
+    @InjectRepository(UserPostLike)
+    private readonly userPostLikeRepo: Repository<UserPostLike>,
+    @InjectRepository(PostFragment)
+    private readonly postFragmentRepo: Repository<PostFragment>
+  ) {}
+
   @FieldResolver()
   async creator(
     @Root() post: Post,
     @Ctx() { userLoader }: MyContext
-  ): Promise<User> {
+  ): Promise<User | undefined> {
     if (post.creator) {
       // just return it, it exists already
       return post.creator;
     }
-    return userLoader.load(post.creatorId.toString());
+    if (post.creatorId) {
+      return userLoader.load(post.creatorId.toString());
+    }
+
+    return undefined;
   }
 
   @FieldResolver()
@@ -65,7 +81,7 @@ export class PostResolver implements ResolverInterface<Post> {
 
   @FieldResolver()
   async likeCount(@Root() post: Post): Promise<number> {
-    return (await UserPostLike.count({ postId: post.id }))!;
+    return (await this.userPostLikeRepo.count({ postId: post.id }))!;
   }
 
   @FieldResolver()
@@ -74,6 +90,6 @@ export class PostResolver implements ResolverInterface<Post> {
       // just return it, it exists already
       return post.usedFragments;
     }
-    return (await PostFragment.find({ postId: post.id }))!;
+    return (await this.postFragmentRepo.find({ postId: post.id }))!;
   }
 }

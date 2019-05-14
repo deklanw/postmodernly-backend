@@ -43,19 +43,17 @@ export class UserResolver {
     const user = await this.userService.login(email, password);
 
     if (user) {
-      ctx.session!.userId = user.id;
+      ctx.session.userInfo = { userId: user.id };
       return user;
     }
 
     return undefined;
   }
 
+  @UseMiddleware(IsAuth)
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
-    if (!ctx.session!.userId) {
-      return undefined;
-    }
-    return this.userService.findOneById(ctx.session!.userId);
+    return this.userService.findUserById(ctx.session.userInfo!.userId!);
   }
 
   @Mutation(() => User, { nullable: true })
@@ -67,7 +65,7 @@ export class UserResolver {
     const user = await this.userService.changePassword(input);
 
     if (user) {
-      ctx.session!.userId = user.id;
+      ctx.session.userInfo!.userId = user.id;
       return user;
     }
 
@@ -79,16 +77,17 @@ export class UserResolver {
     return this.userService.forgotPassword(email);
   }
 
+  @UseMiddleware(IsAuth)
   @Mutation(() => Boolean)
-  logout(@Ctx() ctx: MyContext): Boolean {
-    ctx.session = undefined; // relying on browser behavior to clear cookie?
+  async logout(@Ctx() ctx: MyContext): Promise<Boolean> {
+    ctx.session.userInfo = undefined;
     return true;
   }
 
   @UseMiddleware(IsAuth)
   @Mutation(() => Boolean)
   async deleteUser(@Ctx() ctx: MyContext): Promise<Boolean> {
-    const { userId } = ctx.session!;
+    const { userId } = ctx.session.userInfo!;
     return this.userService.deleteUser(userId);
   }
 }

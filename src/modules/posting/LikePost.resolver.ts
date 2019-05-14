@@ -14,7 +14,7 @@ export class LikePostResolver {
     @Ctx() ctx: MyContext,
     @Arg('data') input: UserPostLikeInput
   ): Promise<Boolean> {
-    const { userId } = ctx.session!;
+    const { userId } = ctx.session.userInfo!;
 
     return this.userPostLikeService.likePost(input, userId);
   }

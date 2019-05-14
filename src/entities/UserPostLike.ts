@@ -1,11 +1,11 @@
-import { Entity, BaseEntity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Field, ObjectType } from 'type-graphql';
 import { Post } from './Post';
 import { User } from './User';
 
 @ObjectType()
 @Entity()
-export class UserPostLike extends BaseEntity {
+export class UserPostLike {
   @Field(() => User)
   @ManyToOne(() => User, user => user.postLikes, {
     onDelete: 'CASCADE'

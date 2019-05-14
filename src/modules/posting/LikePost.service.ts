@@ -36,4 +36,11 @@ export class UserPostLikeService {
     }
     return true;
   }
+
+  async findLike(userId: number, postId: number) {
+    return this.userPostLikeRepo.findOne({
+      userId,
+      postId
+    });
+  }
 }
