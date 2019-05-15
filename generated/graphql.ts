@@ -48,9 +48,15 @@ export type DateTime = any;
 // ====================================================
 
 export interface Query {
-  getPosts: Post[];
+  getPostsWithCursor: PostsWithCursor;
 
   me?: Maybe<User>;
+}
+
+export interface PostsWithCursor {
+  cursor: string;
+
+  posts: Post[];
 }
 
 export interface Post {
@@ -58,7 +64,7 @@ export interface Post {
 
   created: DateTime;
 
-  creator: User;
+  creator?: Maybe<User>;
 
   portman: Portman;
 
@@ -144,7 +150,7 @@ export interface Portman {
 
   name: string;
 
-  posts?: Maybe<Post[]>;
+  posts: Post[];
 
   author1: Author;
 
@@ -213,6 +219,11 @@ export interface FragmentOptionAnon {
 // Arguments
 // ====================================================
 
+export interface GetPostsWithCursorQueryArgs {
+  cursor?: Maybe<string>;
+
+  limit: number;
+}
 export interface LikePostMutationArgs {
   data: UserPostLikeInput;
 }

@@ -20,6 +20,7 @@ import { IsAuth } from '../../middleware/IsAuth';
 import { PostInput } from './PostInput';
 import { NEW_POST } from '../../constants/subscription';
 import { PostingService } from './Posting.service';
+import { PostsWithCursor } from '../../tql-only/PostsWithCursor';
 
 interface NewPostPayload {
   postId: number;
@@ -40,9 +41,13 @@ export class PostResolver {
     return postId;
   }
 
-  @Query(() => [Post])
-  async getPosts(): Promise<Post[]> {
-    return this.postingService.getPosts();
+  @Query(() => PostsWithCursor)
+  async getPostsWithCursor(
+    @Ctx() ctx: MyContext,
+    @Arg('limit', () => Int) limit: number,
+    @Arg('cursor', { nullable: true }) cursor?: string
+  ): Promise<PostsWithCursor> {
+    return this.postingService.getPostsWithCursor(limit, cursor);
   }
 
   @UseMiddleware(IsAuth)

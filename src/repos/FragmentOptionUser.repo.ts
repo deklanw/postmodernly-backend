@@ -57,7 +57,8 @@ export class FragmentOptionAnonRepository extends Repository<
         'Fragment.bookId',
         'Author.id',
         'FragmentOptionAnon.fragmentId',
-        'FragmentOptionAnon.order'
+        'FragmentOptionAnon.order',
+        'Fragment.fragmentText'
       ])
       .innerJoin('FragmentOptionAnon.fragment', 'Fragment')
       .innerJoin('Fragment.book', 'Book')
@@ -92,7 +93,8 @@ export class FragmentOptionUserRepository extends Repository<
         'Fragment.bookId',
         'Author.id',
         'FragmentOptionUser.fragmentId',
-        'FragmentOptionUser.order'
+        'FragmentOptionUser.order',
+        'Fragment.fragmentText'
       ])
       .innerJoin('FragmentOptionUser.fragment', 'Fragment')
       .innerJoin('Fragment.book', 'Book')

@@ -6,11 +6,18 @@ import {
   Repository,
   Transaction,
   TransactionManager,
-  EntityManager
+  EntityManager,
+  LessThan
 } from 'typeorm';
+import { plainToClass } from 'class-transformer';
+
 import { Post } from '../../entities/Post';
 import { PostInput } from './PostInput';
-import { uniqueElementCount } from '../../utils/util';
+import {
+  uniqueElementCount,
+  lastElement,
+  MAX_POST_LENGTH
+} from '../../utils/util';
 import { PortmanService } from './Portman.service';
 import { PostFragment } from '../../entities/PostFragment';
 import { FragmentOptionUser } from '../../entities/FragmentOptionUser';
@@ -21,6 +28,7 @@ import {
   FragmentOptionAnonRepository
 } from '../../repos/FragmentOptionUser.repo';
 import { FragInput } from './FragInput';
+import { PostsWithCursor } from '../../tql-only/PostsWithCursor';
 
 @Service()
 export class PostingService {
@@ -73,9 +81,10 @@ export class PostingService {
     return post.id;
   }
 
-  async getPosts() {
-    // paginate
-    // subscriptions?
+  async getPostsWithCursor(limit: number, cursor?: string) {
+    const whereCondition = cursor
+      ? { created: LessThan(new Date(parseInt(cursor))) }
+      : {};
     const posts = await this.postRepo.find({
       relations: [
         'creator',
@@ -89,12 +98,15 @@ export class PostingService {
         'usedFragments.fragment',
         'usedFragments.fragment.book'
       ],
-      order: { id: 'DESC' }
+      order: { created: 'DESC' },
+      take: limit,
+      where: whereCondition
     });
 
-    console.log(posts[0].userLikes);
-
-    return posts;
+    return plainToClass(PostsWithCursor, {
+      posts,
+      cursor: posts.length > 0 ? lastElement(posts).created : null
+    });
   }
 
   async makePost(
@@ -129,6 +141,15 @@ export class PostingService {
         ipAddress,
         fragmentIds
       );
+    }
+
+    const totalLength = usedFragmentOptions
+      .map(f => f.Fragment_fragment_text.length)
+      .reduce((acc, x) => x + acc);
+
+    if (totalLength > MAX_POST_LENGTH) {
+      console.log('Post too length');
+      return undefined;
     }
 
     // every fragment chosen for this post is among the User's options
