@@ -80,15 +80,19 @@ export class PostingService {
       relations: [
         'creator',
         'book1',
+        'book1.author',
         'book2',
+        'book2.author',
         'portman',
         'userLikes',
-        'usedFragments'
+        'usedFragments',
+        'usedFragments.fragment',
+        'usedFragments.fragment.book'
       ],
       order: { id: 'DESC' }
     });
 
-    console.log(posts);
+    console.log(posts[0].userLikes);
 
     return posts;
   }

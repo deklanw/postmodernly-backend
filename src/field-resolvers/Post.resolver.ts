@@ -81,6 +81,9 @@ export class PostResolver implements ResolverInterface<Post> {
 
   @FieldResolver()
   async likeCount(@Root() post: Post): Promise<number> {
+    if (post.userLikes) {
+      return post.userLikes.length;
+    }
     return (await this.userPostLikeRepo.count({ postId: post.id }))!;
   }
 

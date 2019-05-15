@@ -17,6 +17,10 @@ export class PostFragmentResolver implements ResolverInterface<PostFragment> {
     @Root() postFragment: PostFragment,
     @Ctx() { fragmentLoader }: MyContext
   ): Promise<Fragment> {
+    if (postFragment.fragment) {
+      // already exists on object, skip
+      return postFragment.fragment;
+    }
     return fragmentLoader.load(postFragment.fragmentId.toString());
   }
 }
