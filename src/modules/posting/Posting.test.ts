@@ -227,6 +227,30 @@ describe('Posting', () => {
     expect(makePostResponse).toBeFalsy();
   });
 
+  it('Post fails if too long', async () => {
+    const options = await postOptionService.getNewPostOptions(
+      ipAddress,
+      user1.id
+    );
+
+    const allOptions = options.book1Options.fragmentOptions
+      .concat(options.book2Options.fragmentOptions)
+      .map(el => ({
+        order: el.order,
+        fragmentId: el.fragment.id
+      }));
+
+    const postResponse = await postingService.makePost(
+      {
+        fragments: allOptions.map(el => el)
+      },
+      ipAddress,
+      user1.id
+    );
+
+    expect(postResponse).toBeFalsy();
+  });
+
   it('Can successfully like a post.', async () => {
     const options = await postOptionService.getNewPostOptions(
       ipAddress,
