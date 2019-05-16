@@ -23,7 +23,7 @@ import { PostingService } from './Posting.service';
 import { PostsWithCursor } from '../../tql-only/PostsWithCursor';
 
 interface NewPostPayload {
-  postId: number;
+  post: Post;
 }
 
 @Service()
@@ -31,14 +31,14 @@ interface NewPostPayload {
 export class PostResolver {
   constructor(private readonly postingService: PostingService) {}
 
-  @Subscription(() => Int, {
+  @Subscription(() => Post, {
     topics: NEW_POST
   })
   newPost(@Root()
   {
-    postId
-  }: NewPostPayload): number {
-    return postId;
+    post
+  }: NewPostPayload): Post {
+    return post;
   }
 
   @Query(() => PostsWithCursor)
@@ -73,8 +73,9 @@ export class PostResolver {
     }
     const { ipAddress } = ctx;
     const postId = await this.postingService.makePost(input, ipAddress, userId);
+    const newPost = await this.postingService.getFullPostById(postId!);
 
-    await pubSub.publish(NEW_POST, { postId });
+    await pubSub.publish(NEW_POST, { post: newPost });
 
     return postId;
   }

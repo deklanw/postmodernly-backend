@@ -81,6 +81,26 @@ export class PostingService {
     return post.id;
   }
 
+  async getFullPostById(id: number) {
+    return this.postRepo.findOne({
+      relations: [
+        'creator',
+        'book1',
+        'book1.author',
+        'book2',
+        'book2.author',
+        'portman',
+        'userLikes',
+        'usedFragments',
+        'usedFragments.fragment',
+        'usedFragments.fragment.book'
+      ],
+      where: {
+        id
+      }
+    });
+  }
+
   async getPostsWithCursor(limit: number, cursor?: string) {
     const whereCondition = cursor
       ? { created: LessThan(new Date(parseInt(cursor))) }
