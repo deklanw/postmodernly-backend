@@ -87,7 +87,14 @@ const main = async () => {
   app.register(apolloServer.createHandler({ cors: corsOptions }));
 
   app.listen(4000, () => {
-    console.log('Server started on http://localhost:4000/graphql');
+    console.log(
+      `🚀 Server ready at http://localhost:${4000}${apolloServer.graphqlPath}`
+    );
+    console.log(
+      `🚀 Subscriptions ready at ws://localhost:${4000}${
+        apolloServer.subscriptionsPath
+      }`
+    );
   });
 
   apolloServer.installSubscriptionHandlers(app.server);

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-
 import { Service } from 'typedi';
 import { InjectRepository } from 'typeorm-typedi-extensions';
 import {
@@ -125,7 +124,7 @@ export class PostingService {
 
     return plainToClass(PostsWithCursor, {
       posts,
-      cursor: posts.length > 0 ? lastElement(posts).created : null
+      cursor: posts.length > 0 ? lastElement(posts).created : cursor
     });
   }
 
@@ -168,7 +167,7 @@ export class PostingService {
       .reduce((acc, x) => x + acc);
 
     if (totalLength > MAX_POST_LENGTH) {
-      console.log('Post too length');
+      console.log('Post too long');
       return undefined;
     }
 

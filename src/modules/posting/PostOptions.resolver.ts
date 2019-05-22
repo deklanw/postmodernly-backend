@@ -1,11 +1,12 @@
-import { Resolver, UseMiddleware, Mutation, Ctx, Arg } from 'type-graphql';
 import _ from 'lodash';
+import { Resolver, Mutation, Ctx, Arg } from 'type-graphql';
+import { plainToClass } from 'class-transformer';
 
 import { MyContext } from '../../types/MyContext';
 import { PostOptions } from '../../tql-only/PostOptions';
 import { ReorderOptionsInput } from './ReorderOptionsInput';
 import { PostOptionsService } from './PostOptions.service';
-import { rateLimit } from '../../middleware/RateLimit';
+import { PostOptionsWithTime } from '../../tql-only/PostOptionsWithTime';
 
 @Resolver()
 export class PostOptionsResolver {
@@ -19,9 +20,9 @@ export class PostOptionsResolver {
     }
 
     if (userId) {
-      return this.postOptionsService.getUserOptions(userId);
+      return this.postOptionsService.getCurrentUserOptions(userId);
     }
-    return this.postOptionsService.getAnonOptions(ctx.ipAddress);
+    return this.postOptionsService.getCurrentAnonOptions(ctx.ipAddress);
   }
 
   @Mutation(() => Boolean)
@@ -38,20 +39,28 @@ export class PostOptionsResolver {
     return this.postOptionsService.reorderOptions(input, ipAddress, userId);
   }
 
-  @UseMiddleware(
-    rateLimit({
-      limitForAnon: { period: 5 * 60, requests: 20 },
-      limitForUser: { period: 2 * 60, requests: 20 }
-    })
-  )
-  @Mutation(() => PostOptions)
-  async getNewPostOptions(@Ctx() ctx: MyContext): Promise<PostOptions> {
+  @Mutation(() => PostOptionsWithTime)
+  async getNewPostOptions(@Ctx() ctx: MyContext): Promise<PostOptionsWithTime> {
     let userId: number | undefined;
     if (ctx.session.userInfo && ctx.session.userInfo.userId) {
       ({ userId } = ctx.session.userInfo!);
     }
     const { ipAddress } = ctx;
 
-    return this.postOptionsService.getNewPostOptions(ipAddress, userId);
+    return this.postOptionsService.limitedGetNewPostOptions(ipAddress, userId);
+  }
+
+  @Mutation(() => PostOptionsWithTime)
+  async getPostOptions(@Ctx() ctx: MyContext): Promise<PostOptionsWithTime> {
+    let userId: number | undefined;
+    if (ctx.session.userInfo && ctx.session.userInfo.userId) {
+      ({ userId } = ctx.session.userInfo!);
+    }
+    const { ipAddress } = ctx;
+
+    return this.postOptionsService.limitedGetCurrentOrNewPostOptions(
+      ipAddress,
+      userId
+    );
   }
 }

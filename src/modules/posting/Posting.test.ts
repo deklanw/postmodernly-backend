@@ -9,6 +9,7 @@ import { PostingService } from './Posting.service';
 import { PostOptionsService } from './PostOptions.service';
 import { UserService } from '../user-management/User.service';
 import { UserPostLikeService } from './LikePost.service';
+import { PostOptionsWithTime } from '../../tql-only/PostOptionsWithTime';
 
 let conn: Connection;
 let user1: User;
@@ -72,16 +73,16 @@ describe('FragmentOptions', () => {
   });
 
   it('Thirty options are created in DB.', async () => {
-    const options = await postOptionService.getUserOptions(user1.id);
-    expect(options.book1Options.fragmentOptions.length).toEqual(15);
-    expect(options.book2Options.fragmentOptions.length).toEqual(15);
+    const options = await postOptionService.getCurrentUserOptions(user1.id);
+    expect(options!.book1Options.fragmentOptions.length).toEqual(15);
+    expect(options!.book2Options.fragmentOptions.length).toEqual(15);
   });
 
   it('Calling again will result in still 30 options.', async () => {
     await postOptionService.getNewPostOptions(ipAddress, user1.id);
-    const options = await postOptionService.getUserOptions(user1.id);
-    expect(options.book1Options.fragmentOptions.length).toEqual(15);
-    expect(options.book2Options.fragmentOptions.length).toEqual(15);
+    const options = await postOptionService.getCurrentUserOptions(user1.id);
+    expect(options!.book1Options.fragmentOptions.length).toEqual(15);
+    expect(options!.book2Options.fragmentOptions.length).toEqual(15);
   });
 
   it('Reorder Options succeeds with an identical reorder.', async () => {

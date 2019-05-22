@@ -50,10 +50,12 @@ export class UserResolver {
     return undefined;
   }
 
-  @UseMiddleware(IsAuth)
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
-    return this.userService.findUserById(ctx.session.userInfo!.userId!);
+    if (ctx.session.userInfo && ctx.session.userInfo.userId) {
+      return this.userService.findUserById(ctx.session.userInfo.userId);
+    }
+    return undefined;
   }
 
   @Mutation(() => User, { nullable: true })
