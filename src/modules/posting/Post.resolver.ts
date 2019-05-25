@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Service } from 'typedi';
 import {
   Resolver,
@@ -47,7 +46,11 @@ export class PostResolver {
     @Arg('limit', () => Int) limit: number,
     @Arg('cursor', { nullable: true }) cursor?: string
   ): Promise<PostsWithCursor> {
-    return this.postingService.getPostsWithCursor(limit, cursor);
+    let userId: number | undefined;
+    if (ctx.session.userInfo && ctx.session.userInfo.userId) {
+      ({ userId } = ctx.session.userInfo!);
+    }
+    return this.postingService.getPostsWithCursor(limit, cursor, userId);
   }
 
   @UseMiddleware(IsAuth)
@@ -55,7 +58,7 @@ export class PostResolver {
   async deletePost(
     @Ctx() ctx: MyContext,
     @Arg('postId', () => Int) postId: number
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const { userId } = ctx.session.userInfo!;
     return this.postingService.deletePost(postId, userId);
   }
@@ -73,9 +76,11 @@ export class PostResolver {
     }
     const { ipAddress } = ctx;
     const postId = await this.postingService.makePost(input, ipAddress, userId);
-    const newPost = await this.postingService.getFullPostById(postId!);
+    const newPost = await this.postingService.getFullPostById(postId!, userId);
 
-    await pubSub.publish(NEW_POST, { post: newPost });
+    await pubSub.publish(NEW_POST, {
+      post: newPost
+    });
 
     return postId;
   }

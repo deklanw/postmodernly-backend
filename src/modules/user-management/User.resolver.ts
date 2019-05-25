@@ -30,7 +30,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  async confirmUser(@Arg('token') token: string): Promise<Boolean> {
+  async confirmUser(@Arg('token') token: string): Promise<boolean> {
     return this.userService.confirmUser(token);
   }
 
@@ -75,20 +75,20 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(@Arg('email') email: string): Promise<Boolean> {
+  async forgotPassword(@Arg('email') email: string): Promise<boolean> {
     return this.userService.forgotPassword(email);
   }
 
   @UseMiddleware(IsAuth)
   @Mutation(() => Boolean)
-  async logout(@Ctx() ctx: MyContext): Promise<Boolean> {
+  async logout(@Ctx() ctx: MyContext): Promise<boolean> {
     ctx.session.userInfo = undefined;
     return true;
   }
 
   @UseMiddleware(IsAuth)
   @Mutation(() => Boolean)
-  async deleteUser(@Ctx() ctx: MyContext): Promise<Boolean> {
+  async deleteUser(@Ctx() ctx: MyContext): Promise<boolean> {
     const { userId } = ctx.session.userInfo!;
     return this.userService.deleteUser(userId);
   }

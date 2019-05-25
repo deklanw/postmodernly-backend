@@ -13,7 +13,7 @@ export class LikePostResolver {
   async likePost(
     @Ctx() ctx: MyContext,
     @Arg('data') input: UserPostLikeInput
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const { userId } = ctx.session.userInfo!;
 
     return this.userPostLikeService.likePost(input, userId);

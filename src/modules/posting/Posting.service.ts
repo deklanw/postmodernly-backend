@@ -80,8 +80,19 @@ export class PostingService {
     return post.id;
   }
 
-  async getFullPostById(id: number) {
-    return this.postRepo.findOne({
+  static augmentPost(post?: Post, userId?: number): Post | null {
+    if (post) {
+      return {
+        ...post,
+        currentUserLiked: post.userLikes.some(el => el.userId === userId),
+        currentUserOwns: post.creatorId === userId
+      };
+    }
+    return null;
+  }
+
+  async getFullPostById(id: number, userId?: number) {
+    const post = await this.postRepo.findOne({
       relations: [
         'creator',
         'book1',
@@ -98,13 +109,16 @@ export class PostingService {
         id
       }
     });
+
+    return PostingService.augmentPost(post, userId);
   }
 
-  async getPostsWithCursor(limit: number, cursor?: string) {
+  async getPostsWithCursor(limit: number, cursor?: string, userId?: number) {
     const whereCondition = cursor
       ? { created: LessThan(new Date(parseInt(cursor))) }
       : {};
-    const posts = await this.postRepo.find({
+
+    let posts = await this.postRepo.find({
       relations: [
         'creator',
         'book1',
@@ -121,6 +135,8 @@ export class PostingService {
       take: limit,
       where: whereCondition
     });
+
+    posts = posts.map(post => PostingService.augmentPost(post, userId)!);
 
     return plainToClass(PostsWithCursor, {
       posts,

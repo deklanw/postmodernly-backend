@@ -17,7 +17,7 @@ export const createEntityLoader = (entity: any) => () =>
   });
 
 export function createEntityDataLoader<T>(entity: T) {
-  const batch = async (keys: string[]): Promise<Array<T | null>> => {
+  const batch = async (keys: string[]): Promise<(T | null)[]> => {
     const objs = await getRepository(entity as any).findByIds(keys);
 
     const map: { [key: number]: T } = {};

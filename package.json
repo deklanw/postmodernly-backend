@@ -41,6 +41,7 @@
     "@types/node": "^11.13.9",
     "@types/nodemailer": "^4.6.8",
     "@types/uuid": "^3.4.4",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.7.0",
     "eslint": "5.16.0",
     "eslint-config-airbnb": "17.1.0",
@@ -50,10 +51,6 @@
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-react": "7.12.4",
     "faker": "^4.1.0",
-    "graphql-code-generator": "^0.18.1",
-    "graphql-codegen-typescript-client": "^0.18.1",
-    "graphql-codegen-typescript-common": "^0.18.1",
-    "graphql-codegen-typescript-server": "^0.18.1",
     "jest": "^24.7.1",
     "jsverify": "^0.8.4",
     "prettier": "^1.17.0",
@@ -65,7 +62,7 @@
   "scripts": {
     "start": "ts-node-dev --respawn src/index.ts",
     "db:setup": "ts-node ./src/test-utils/setup.ts",
-    "test": "yarn run db:setup && jest",
-    "genTypes": "gql-gen --config codegen.yml"
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx} --quiet",
+    "test": "yarn run db:setup && jest"
   }
 }

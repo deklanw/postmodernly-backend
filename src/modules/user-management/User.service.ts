@@ -42,7 +42,7 @@ export class UserService {
     return { user, token };
   }
 
-  async confirmUser(token: string): Promise<Boolean> {
+  async confirmUser(token: string): Promise<boolean> {
     const userId = await redis.get(confirmUserPrefix + token);
 
     if (!userId) {

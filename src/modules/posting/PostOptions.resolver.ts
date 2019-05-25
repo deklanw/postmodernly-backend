@@ -1,6 +1,4 @@
-import _ from 'lodash';
 import { Resolver, Mutation, Ctx, Arg } from 'type-graphql';
-import { plainToClass } from 'class-transformer';
 
 import { MyContext } from '../../types/MyContext';
 import { PostOptions } from '../../tql-only/PostOptions';
@@ -29,7 +27,7 @@ export class PostOptionsResolver {
   async reorderOptions(
     @Ctx() ctx: MyContext,
     @Arg('data') input: ReorderOptionsInput
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     let userId: number | undefined;
     if (ctx.session.userInfo && ctx.session.userInfo.userId) {
       ({ userId } = ctx.session.userInfo!);

@@ -62,7 +62,15 @@ export class Post {
   // @Field(() => [UserPostLike], { nullable: true })
   // just need count on schema
   @OneToMany(() => UserPostLike, upl => upl.post)
-  userLikes?: UserPostLike[];
+  userLikes: UserPostLike[];
+
+  // true if logged in and liked. false if logged in and not liked, or if not loggedin.
+  @Field()
+  currentUserLiked: boolean;
+
+  // true if logged in and user owns post. false if logged in and doesn't own post, or if not loggedin.
+  @Field()
+  currentUserOwns: boolean;
 
   @Field(() => Int)
   @Column('int', { default: 0 })

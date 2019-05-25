@@ -21,7 +21,7 @@ export class IsEmailAlreadyExistConstraint
 }
 
 export function IsEmailAlreadyExist(options?: ValidationOptions) {
-  return (object: Object, propertyName: string) => {
+  return (object: {}, propertyName: string) => {
     registerDecorator({
       propertyName,
       options,
