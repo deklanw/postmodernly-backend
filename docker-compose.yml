@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  web:
+    image: postmodernly-backend
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    networks:
+      - webnet
+    env_file: 
+      - './docker-compose.env'
+  db:
+    image: postgres:11.3
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    env_file: 
+      - './docker-compose.env'
+    networks:
+      - webnet
+  redis:
+    image: redis:5.0.5
+    env_file: 
+      - './docker-compose.env'
+    networks:
+      - webnet
+networks:
+  webnet:

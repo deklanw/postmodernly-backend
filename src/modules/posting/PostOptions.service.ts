@@ -22,7 +22,10 @@ import { FragmentOptionAnon } from '../../entities/FragmentOptionAnon';
 import { FragmentOption } from '../../entities/shared/FragmentOption';
 import { LIMITS } from '../../utils/rateLimitConstants';
 import { redis } from '../../utils/RedisStore';
-import { PostOptionsWithTime } from '../../tql-only/PostOptionsWithTime';
+import {
+  PostOptionsWithTime,
+  RemainingLimit
+} from '../../tql-only/PostOptionsWithTime';
 
 @Service()
 export class PostOptionsService {
@@ -156,12 +159,17 @@ export class PostOptionsService {
     });
   }
 
+  private getRedisKey(ipAddress: string, userId?: number) {
+    return `rate-limit:getOptions:${userId || ipAddress}`;
+  }
+
   // consider abstracting this for other limits
   // implement as middleware?
   async rateLimitGetNewPostOptions(ipAddress: string, userId?: number) {
     const { limitForAnon, limitForUser } = LIMITS;
     const isAnon = !userId;
-    const key = `rate-limit:getOptions:${isAnon ? ipAddress : userId}`;
+    const limit = isAnon ? limitForAnon.requests : limitForUser.requests;
+    const key = this.getRedisKey(ipAddress, userId);
 
     const current = await redis.incr(key); // if key doesn't exist, sets to zero then increments
 
@@ -172,24 +180,47 @@ export class PostOptionsService {
         isAnon ? limitForAnon.period : limitForUser.period
       );
     }
-    const remainingTime = await redis.ttl(key);
+
+    // potential race condition where key expires immediately after incrementing it
+    const remainingSeconds = await redis.ttl(key);
+
     let overLimit = false;
 
-    if (
-      (isAnon && current > limitForAnon.requests) ||
-      (!isAnon && current > limitForUser.requests)
-    ) {
+    if (current > limit) {
       overLimit = true;
     }
 
-    return { overLimit, remainingTime };
+    return {
+      overLimit,
+      remainingSeconds,
+      remainingRefreshes: Math.max(0, limit - current) // so this is always nonnegative
+    };
+  }
+
+  async checkRemaining(ipAddress: string, userId?: number) {
+    const { limitForAnon, limitForUser } = LIMITS;
+    const limit = userId ? limitForUser.requests : limitForAnon.requests;
+    const key = this.getRedisKey(ipAddress, userId);
+
+    const response = await redis.get(key);
+    if (!response) {
+      return null;
+    }
+    const current = parseInt(response);
+    // potential race condition between getting key and checking ttl
+    const remainingSeconds = await redis.ttl(key);
+    return {
+      remainingSeconds,
+      remainingRefreshes: Math.max(0, limit - current) // so this is always nonnegative
+    };
   }
 
   async limitedGetNewPostOptions(ipAddress: string, userId?: number) {
-    const { overLimit, remainingTime } = await this.rateLimitGetNewPostOptions(
-      ipAddress,
-      userId
-    );
+    const {
+      overLimit,
+      remainingRefreshes,
+      remainingSeconds
+    } = await this.rateLimitGetNewPostOptions(ipAddress, userId);
 
     let options: PostOptions | null = null;
 
@@ -199,7 +230,10 @@ export class PostOptionsService {
 
     return plainToClass(PostOptionsWithTime, {
       postOptions: options,
-      remainingTime
+      remaining: plainToClass(RemainingLimit, {
+        remainingRefreshes,
+        remainingSeconds
+      })
     });
   }
 
@@ -213,12 +247,19 @@ export class PostOptionsService {
       options = await this.getCurrentAnonOptions(ipAddress);
     }
 
+    // get their current limit from redis, if any
+    const response = await this.checkRemaining(ipAddress, userId);
+
     // if user already has valid options, just return
-    // in this case, we don't know their remaining time. only know it if they (attempt to) getNew
     if (options) {
       return plainToClass(PostOptionsWithTime, {
         postOptions: options,
-        remainingTime: null
+        remaining: response
+          ? plainToClass(RemainingLimit, {
+              remainingRefreshes: response.remainingRefreshes,
+              remainingSeconds: response.remainingSeconds
+            })
+          : null
       });
     }
 

@@ -9,6 +9,6 @@ type Limit = {
 };
 
 export const LIMITS: Limit = {
-  limitForAnon: { period: 5 * 60, requests: 20 },
-  limitForUser: { period: 2 * 60, requests: 20 }
+  limitForAnon: { period: 5 * 60, requests: 5 },
+  limitForUser: { period: 5 * 60, requests: 10 }
 };

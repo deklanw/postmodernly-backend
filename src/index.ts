@@ -21,11 +21,10 @@ import { fragmentLoader } from './loaders/fragmentLoader';
 import { userLoader } from './loaders/userLoader';
 import { portmanLoader } from './loaders/portmanLoader';
 
-const secret = 'fjieosjfoejf09ofjeosijfiosejfoes3j90j)#(#()';
 const SESSION_DURATION_S = 60 * 60 * 24 * 7; // 7 days
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL,
   credentials: true
 };
 
@@ -36,8 +35,20 @@ const main = async () => {
   useContainerCV(Container);
   console.log('Setup TypeORM and class-validator containers');
 
-  await createConnection(options);
-  console.log('Created connection.');
+  let connectionRetries = 5;
+
+  while (connectionRetries) {
+    try {
+      await createConnection(options);
+      console.log('Created connection.');
+      break;
+    } catch (err) {
+      console.log(err);
+      connectionRetries -= 1;
+      console.log(`${connectionRetries} retries left`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
 
   const schema = await createSchema(Container);
   console.log('Created schema.');
@@ -73,7 +84,7 @@ const main = async () => {
   app.register(fastifyRedis, { client: redis });
   app.register(fastifyCaching, { cache: abcache });
   app.register(fastifyServerSession, {
-    secretKey: secret,
+    secretKey: process.env.SESSION_SECRET,
     sessionMaxAge: SESSION_DURATION_S * 1000,
     sessionCookieName: sessionKey,
     cookie: {
@@ -88,10 +99,10 @@ const main = async () => {
 
   app.listen(4000, () => {
     console.log(
-      `🚀 Server ready at http://localhost:${4000}${apolloServer.graphqlPath}`
+      `🚀 Server ready at http://localhost:4000${apolloServer.graphqlPath}`
     );
     console.log(
-      `🚀 Subscriptions ready at ws://localhost:${4000}${
+      `🚀 Subscriptions ready at ws://localhost:4000${
         apolloServer.subscriptionsPath
       }`
     );

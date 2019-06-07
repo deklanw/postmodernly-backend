@@ -4,6 +4,7 @@
   "main": "index.ts",
   "license": "MIT",
   "dependencies": {
+    "@sendgrid/mail": "^6.4.0",
     "abstract-cache": "^1.0.1",
     "abstract-cache-redis": "^1.0.2",
     "apollo-server-fastify": "^2.4.8",
@@ -21,7 +22,6 @@
     "graphql-rate-limit-directive": "^1.1.0",
     "ioredis": "^4.9.0",
     "lodash": "^4.17.11",
-    "nodemailer": "^6.1.1",
     "pg": "^7.10.0",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^0.17.3",
@@ -39,10 +39,10 @@
     "@types/jest": "^24.0.12",
     "@types/lodash": "^4.14.123",
     "@types/node": "^11.13.9",
-    "@types/nodemailer": "^4.6.8",
     "@types/uuid": "^3.4.4",
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.7.0",
+    "dotenv-safe": "^6.1.0",
     "eslint": "5.16.0",
     "eslint-config-airbnb": "17.1.0",
     "eslint-config-prettier": "^4.2.0",
@@ -60,9 +60,10 @@
     "typescript": "^3.4.5"
   },
   "scripts": {
-    "start": "ts-node-dev --respawn src/index.ts",
-    "db:setup": "ts-node ./src/test-utils/setup.ts",
+    "start": "ts-node-dev -r dotenv-safe/config --respawn src/index.ts",
+    "db:setup": "ts-node -r dotenv-safe/config ./src/test-utils/setup.ts",
     "lint": "eslint src/**/*.{js,jsx,ts,tsx} --quiet",
-    "test": "yarn run db:setup && jest"
+    "test": "yarn run db:setup && jest",
+    "build": "tsc"
   }
 }

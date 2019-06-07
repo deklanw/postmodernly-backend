@@ -26,6 +26,8 @@ module.exports = {
     '@typescript-eslint/no-parameter-properties': 0,
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/prefer-interface': 'warn',
+    'no-await-in-loop': 'warn',
+    'no-loop-func': 'warn',
     radix: 0
   },
   settings: {

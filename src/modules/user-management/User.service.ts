@@ -10,7 +10,7 @@ import {
   confirmUserPrefix,
   forgotPasswordPrefix
 } from '../../constants/redisPrefixes';
-import { createConfirmationToken } from '../../utils/createConfirmationURL';
+import { createConfirmationToken } from '../../utils/createConfirmationToken';
 import { sendEmail } from '../../utils/sendEmail';
 import { ChangePasswordInput } from './ChangePasswordInput';
 import { RegisterInput } from './RegisterInput';
@@ -36,7 +36,7 @@ export class UserService {
     await this.userRepo.save(user);
 
     const token = await createConfirmationToken(user.id);
-    const url = `http://localhost:3000/user/confirm/${token}`;
+    const url = `${process.env.FRONTEND_URL}/confirm-user/${token}`;
     await sendEmail(email, url);
 
     return { user, token };
@@ -111,7 +111,7 @@ export class UserService {
 
     await sendEmail(
       email,
-      `http://localhost:3000/user/change-password/${token}`
+      `${process.env.FRONTEND_URL}/user/change-password/${token}`
     );
 
     return true;

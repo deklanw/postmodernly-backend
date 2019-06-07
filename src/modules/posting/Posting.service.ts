@@ -212,21 +212,14 @@ export class PostingService {
       return undefined;
     }
 
-    let bookInfo1 = {
+    const bookInfo1 = {
       bookId: book1FragmentOptions[0].Fragment_book_id,
       authorId: book1FragmentOptions[0].Author_id
     };
-    let bookInfo2 = {
+    const bookInfo2 = {
       bookId: book2FragmentOptions[0].Fragment_book_id,
       authorId: book2FragmentOptions[0].Author_id
     };
-
-    // make sure 1 refers to the book with lesser authorId
-    if (bookInfo1.authorId > bookInfo2.authorId) {
-      const temp = bookInfo1;
-      bookInfo1 = bookInfo2;
-      bookInfo2 = temp;
-    }
 
     const portman = await this.portmanService.findOrInsertPortman(
       bookInfo1.authorId,

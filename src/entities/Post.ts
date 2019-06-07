@@ -23,6 +23,7 @@ export class Post {
   id: number;
 
   // https://github.com/typeorm/typeorm/blob/master/test/functional/database-schema/column-types/postgres/entity/Post.ts#L97
+  @Index() // index for Post cursor pagination
   @Field()
   @CreateDateColumn({ type: 'timestamp with time zone' })
   created: Date;

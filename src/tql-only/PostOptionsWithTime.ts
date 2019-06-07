@@ -1,12 +1,21 @@
 import { ObjectType, Field, Int } from 'type-graphql';
 import { PostOptions } from './PostOptions';
 
-// If postOptions is null, then remainingTime isn't.
+@ObjectType()
+export class RemainingLimit {
+  @Field(() => Int)
+  remainingRefreshes: number;
+
+  @Field(() => Int)
+  remainingSeconds: number;
+}
+
 @ObjectType()
 export class PostOptionsWithTime {
   @Field(() => PostOptions, { nullable: true })
   postOptions?: PostOptions;
 
-  @Field(() => Int, { nullable: true })
-  remainingTime?: number;
+  // this is null when the user already has options, and they have no redis key (no current limit info)
+  @Field(() => RemainingLimit, { nullable: true })
+  remaining?: RemainingLimit;
 }
