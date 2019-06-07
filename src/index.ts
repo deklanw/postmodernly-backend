@@ -97,7 +97,7 @@ const main = async () => {
 
   app.register(apolloServer.createHandler({ cors: corsOptions }));
 
-  app.listen(4000, () => {
+  app.listen(4000, process.env.SERVER_HOST!, () => {
     console.log(
       `🚀 Server ready at http://localhost:4000${apolloServer.graphqlPath}`
     );
