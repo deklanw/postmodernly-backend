@@ -14,6 +14,10 @@ import { createConfirmationToken } from '../../utils/createConfirmationToken';
 import { sendEmail } from '../../utils/sendEmail';
 import { ChangePasswordInput } from './ChangePasswordInput';
 import { RegisterInput } from './RegisterInput';
+import {
+  forgotPasswordTemplate,
+  confirmEmailTemplate as confirmUserTemplate
+} from '../../utils/emailTemplates';
 
 // make services out of redis and email sending?
 
@@ -23,10 +27,7 @@ export class UserService {
     @InjectRepository(User) private readonly userRepo: Repository<User>
   ) {}
 
-  async register({
-    email,
-    password
-  }: RegisterInput): Promise<{ user: User; token: string }> {
+  async register({ email, password }: RegisterInput): Promise<boolean> {
     const hashedPass = await bcrypt.hash(password, 15);
 
     const user = await this.userRepo.create({
@@ -35,11 +36,34 @@ export class UserService {
     });
     await this.userRepo.save(user);
 
+    await this.sendConfirmationEmail(email, user);
+
+    return true;
+  }
+
+  async sendConfirmationEmail(email: string, user: User) {
     const token = await createConfirmationToken(user.id);
-    const url = `${process.env.FRONTEND_URL}/confirm-user/${token}`;
-    await sendEmail(email, url);
+    await sendEmail(
+      email,
+      'Confirm your Postmodernly account',
+      confirmUserTemplate(`${process.env.FRONTEND_URL}/confirm-user/${token}`)
+    );
 
     return { user, token };
+  }
+
+  async resendConfirmationEmail(email: string) {
+    const user = await this.userRepo.findOne({
+      email
+    });
+
+    // if user doesn't exist or is already confirmed return false
+    if (!user || user.confirmed) {
+      return false;
+    }
+
+    await this.sendConfirmationEmail(email, user);
+    return true;
   }
 
   async confirmUser(token: string): Promise<boolean> {
@@ -103,7 +127,7 @@ export class UserService {
   async forgotPassword(email: string) {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) {
-      return true;
+      return false;
     }
 
     const token = v4();
@@ -111,7 +135,10 @@ export class UserService {
 
     await sendEmail(
       email,
-      `${process.env.FRONTEND_URL}/user/change-password/${token}`
+      'Finish changing your Postmodernly password',
+      forgotPasswordTemplate(
+        `${process.env.FRONTEND_URL}/change-password/${token}`
+      )
     );
 
     return true;

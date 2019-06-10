@@ -20,13 +20,17 @@ import { ChangePasswordInput } from './ChangePasswordInput';
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
-  @Mutation(() => User)
+  @Mutation(() => Boolean)
   async register(
     @Arg('data')
     registerInput: RegisterInput
-  ): Promise<User> {
-    const { user } = await this.userService.register(registerInput);
-    return user;
+  ): Promise<boolean> {
+    return this.userService.register(registerInput);
+  }
+
+  @Mutation(() => Boolean)
+  async resendConfirmationEmail(@Arg('email') email: string): Promise<boolean> {
+    return this.userService.resendConfirmationEmail(email);
   }
 
   @Mutation(() => Boolean)
@@ -58,20 +62,19 @@ export class UserResolver {
     return undefined;
   }
 
-  @Mutation(() => User, { nullable: true })
+  @Mutation(() => Boolean)
   async changePassword(
     @Arg('data')
     input: ChangePasswordInput,
     @Ctx() ctx: MyContext
-  ): Promise<User | undefined> {
+  ): Promise<boolean> {
     const user = await this.userService.changePassword(input);
 
     if (user) {
-      ctx.session.userInfo!.userId = user.id;
-      return user;
+      return true;
     }
 
-    return undefined;
+    return false;
   }
 
   @Mutation(() => Boolean)
