@@ -1,15 +1,15 @@
 import { ObjectType, Field } from 'type-graphql';
 import { Book } from '../entities/Book';
 import { Portman } from '../entities/Portman';
-import { FragmentOptionUser } from '../entities/FragmentOptionUser';
+import { FragmentOption } from '../entities/shared/FragmentOption';
 
 @ObjectType()
 export class BookFragmentOptions {
   @Field(() => Book)
   book: Book;
 
-  @Field(() => [FragmentOptionUser])
-  fragmentOptions: FragmentOptionUser[];
+  @Field(() => [FragmentOption])
+  fragmentOptions: FragmentOption[];
 }
 
 @ObjectType()

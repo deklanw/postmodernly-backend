@@ -1,7 +1,7 @@
 import { Resolver, FieldResolver, Root, ResolverInterface } from 'type-graphql';
 import { PostOptions, BookFragmentOptions } from '../tql-only/PostOptions';
 import { Book } from '../entities/Book';
-import { FragmentOptionUser } from '../entities/FragmentOptionUser';
+import { FragmentOption } from '../entities/shared/FragmentOption';
 
 // these Fields don't correspond directly to anything in the DB.
 // these should be resolved only from the raw SQL query written in the respective resolver
@@ -22,7 +22,7 @@ export class BookFragmentOptionsResolver
   @FieldResolver()
   fragmentOptions(
     @Root() bookFragmentOptions: BookFragmentOptions
-  ): FragmentOptionUser[] {
+  ): FragmentOption[] {
     if (bookFragmentOptions.fragmentOptions) {
       // already exists on object, skip
       return bookFragmentOptions.fragmentOptions;
