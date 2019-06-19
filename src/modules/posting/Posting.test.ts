@@ -9,7 +9,6 @@ import { PostingService } from './Posting.service';
 import { PostOptionsService } from './PostOptions.service';
 import { UserService } from '../user-management/User.service';
 import { UserPostLikeService } from './LikePost.service';
-import { PostOptionsWithTime } from '../../tql-only/PostOptionsWithTime';
 
 let conn: Connection;
 let user1: User;

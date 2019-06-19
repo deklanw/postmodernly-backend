@@ -25,7 +25,10 @@ export class UserResolver {
     @Arg('data')
     registerInput: RegisterInput
   ): Promise<boolean> {
-    return this.userService.register(registerInput);
+    const { token, user } = await this.userService.register(registerInput);
+    await this.userService.sendConfirmationEmail(token, user);
+
+    return true;
   }
 
   @Mutation(() => Boolean)

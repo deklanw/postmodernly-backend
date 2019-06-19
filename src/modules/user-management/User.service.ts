@@ -27,7 +27,10 @@ export class UserService {
     @InjectRepository(User) private readonly userRepo: Repository<User>
   ) {}
 
-  async register({ email, password }: RegisterInput): Promise<boolean> {
+  async register({
+    email,
+    password
+  }: RegisterInput): Promise<{ user: User; token: string }> {
     const hashedPass = await bcrypt.hash(password, 15);
 
     const user = await this.userRepo.create({
@@ -35,16 +38,14 @@ export class UserService {
       password: hashedPass
     });
     await this.userRepo.save(user);
+    const token = await createConfirmationToken(user.id);
 
-    await this.sendConfirmationEmail(email, user);
-
-    return true;
+    return { user, token };
   }
 
-  async sendConfirmationEmail(email: string, user: User) {
-    const token = await createConfirmationToken(user.id);
+  async sendConfirmationEmail(token: string, user: User) {
     await sendEmail(
-      email,
+      user.email,
       'Confirm your Postmodernly account',
       confirmUserTemplate(`${process.env.FRONTEND_URL}/confirm-user/${token}`)
     );
