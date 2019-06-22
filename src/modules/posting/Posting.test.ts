@@ -31,12 +31,18 @@ beforeAll(async () => {
   likePostService = Container.get(UserPostLikeService);
   userService = Container.get(UserService);
 
-  const { user: registeredUser1, token: token1 } = await userService.register({
+  const {
+    user: registeredUser1,
+    token: token1
+  } = await userService.createUserAndToken({
     email: faker.internet.email(),
     password: faker.internet.password()
   });
 
-  const { user: registeredUser2, token: token2 } = await userService.register({
+  const {
+    user: registeredUser2,
+    token: token2
+  } = await userService.createUserAndToken({
     email: faker.internet.email(),
     password: faker.internet.password()
   });

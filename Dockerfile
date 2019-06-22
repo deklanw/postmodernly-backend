@@ -14,4 +14,4 @@ WORKDIR /app/dist
 
 EXPOSE 4000
 
-CMD node src/index.js
+CMD node ./index.js

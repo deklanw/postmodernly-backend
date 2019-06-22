@@ -24,7 +24,7 @@ describe('Register', () => {
       password: faker.internet.password()
     };
 
-    const { user: registeredUser } = await service.register({
+    const { user: registeredUser } = await service.createUserAndToken({
       email: user.email,
       password: user.password
     });
@@ -45,7 +45,7 @@ describe('Login', () => {
       password: faker.internet.password()
     };
 
-    const { user: registeredUser, token } = await service.register({
+    const { user: registeredUser, token } = await service.createUserAndToken({
       email: user.email,
       password: user.password
     });

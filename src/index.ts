@@ -55,21 +55,23 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
-    context: request => ({
-      session: request.session,
-      ipAddress: request.ip,
-      bookLoader: bookLoader(),
-      authorLoader: authorLoader(),
-      fragmentLoader: fragmentLoader(),
-      userLoader: userLoader(),
-      portmanLoader: portmanLoader()
-    }),
+    context: request => {
+      return {
+        session: request.session,
+        ipAddress: request.ips ? request.ips[0] : request.ip,
+        bookLoader: bookLoader(),
+        authorLoader: authorLoader(),
+        fragmentLoader: fragmentLoader(),
+        userLoader: userLoader(),
+        portmanLoader: portmanLoader()
+      };
+    },
     subscriptions: {
       path: '/subscriptions'
     }
   });
 
-  const app = fastify();
+  const app = fastify({ trustProxy: true });
 
   const abcache = abstractCache({
     useAwait: false,

@@ -27,7 +27,14 @@ export class UserService {
     @InjectRepository(User) private readonly userRepo: Repository<User>
   ) {}
 
-  async register({
+  async register(registerInput: RegisterInput): Promise<boolean> {
+    const { user, token } = await this.createUserAndToken(registerInput);
+    await this.sendConfirmationEmail(token, user);
+
+    return true;
+  }
+
+  async createUserAndToken({
     email,
     password
   }: RegisterInput): Promise<{ user: User; token: string }> {
@@ -63,7 +70,9 @@ export class UserService {
       return false;
     }
 
-    await this.sendConfirmationEmail(email, user);
+    const token = await createConfirmationToken(user.id);
+
+    await this.sendConfirmationEmail(token, user);
     return true;
   }
 

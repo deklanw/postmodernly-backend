@@ -3,3 +3,4 @@ todo
 dist
 .env
 docker-compose.env
+traefik.toml

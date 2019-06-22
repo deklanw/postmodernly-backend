@@ -14,6 +14,7 @@ import { MyContext } from '../../types/MyContext';
 import { UserService } from './User.service';
 import { RegisterInput } from './RegisterInput';
 import { ChangePasswordInput } from './ChangePasswordInput';
+import { createConfirmationToken } from '../../utils/createConfirmationToken';
 
 @Service()
 @Resolver()
@@ -25,10 +26,7 @@ export class UserResolver {
     @Arg('data')
     registerInput: RegisterInput
   ): Promise<boolean> {
-    const { token, user } = await this.userService.register(registerInput);
-    await this.userService.sendConfirmationEmail(token, user);
-
-    return true;
+    return this.userService.register(registerInput);
   }
 
   @Mutation(() => Boolean)
