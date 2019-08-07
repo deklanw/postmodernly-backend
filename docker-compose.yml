@@ -1,32 +1,19 @@
 version: "3.7"
 services:
-  reverse-proxy:
-    image: traefik:1.7.12
-    restart: always
-    depends_on: 
-      - web
-    ports:
-      - "80:80" # HTTP port
-      - "443:443" # HTTPS port
-      - "8080:8080" # web UI
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/traefik/traefik.toml:/traefik.toml
-      - /opt/traefik/acme.json:/acme.json
-    networks:
-      - webnet
   web:
     image: deklanw/postmodernly:latest
     depends_on:
       - db
       - redis
     networks:
-      - webnet
+      - web
+      - internal
     env_file: 
       - './docker-compose.env'
     labels:
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:postmodernly-gql.deklan.dev"
+      - "traefik.docker.network=web"
       - "traefik.port=4000"
   db:
     image: postgres:11.3
@@ -35,12 +22,15 @@ services:
     env_file: 
       - './docker-compose.env'
     networks:
-      - webnet
+      - internal
   redis:
     image: redis:5.0.5
     env_file: 
       - './docker-compose.env'
     networks:
-      - webnet
+      - internal
 networks:
-  webnet:
+  web:
+    external: true
+  internal:
+    external: false
