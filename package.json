@@ -7,7 +7,7 @@
     "@sendgrid/mail": "^6.4.0",
     "abstract-cache": "^1.0.1",
     "abstract-cache-redis": "^1.0.2",
-    "apollo-server-fastify": "^2.4.8",
+    "apollo-server-fastify": "^2.14.2",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.2.0",
     "class-validator": "^0.9.1",
